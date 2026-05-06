@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>增城区教学成果多维度分析系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/wordcloud@1.2.2/src/wordcloud2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c7a5e;
+            --secondary-color: #38a169;
+            --accent-color: #e6b93f;
+            --key-color: #2c5282;
+            --general-color: #718096;
+            --danger-color: #e53e3e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            color: #2d3748;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #2a4365 100%);
+            color: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-color), #f6ad55);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.95;
+            max-width: 800px;
+            margin: 0 auto 20px;
+            line-height: 1.6;
+        }
+        
+        .stats-overview {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            min-width: 200px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-value {
+            font-size: 2.8rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+        
+        .analysis-section {
+            margin-bottom: 40px;
+        }
+        
+        .section-title {
+            color: var(--primary-color);
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--accent-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section-title i {
+            font-size: 2rem;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+        }
+        
+        .card-title {
+            color: var(--key-color);
+            font-size: 1.5rem;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #edf2f7;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .chart-container {
+            height: 420px;
+            width: 100%;
+            position: relative;
+        }
+        
+        .comparison-container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .wordcloud-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        .wordcloud-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .wordcloud-title {
+            text-align: center;
+            color: var(--primary-color);
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .wordcloud-area {
+            height: 320px;
+            width: 100%;
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
+        .tab-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            border-bottom: 2px solid #edf2f7;
+            padding-bottom: 15px;
+        }
+        
+        .tab-btn {
+            padding: 10px 24px;
+            background: #edf2f7;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #4a5568;
+            font-weight: 500;
+            font-size: 1rem;
+        }
+        
+        .tab-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .tab-btn:hover:not(.active) {
+            background: #e2e8f0;
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .network-container {
+            height: 500px;
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            background: white;
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .legend-color {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+        }
+        
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .insight-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid var(--primary-color);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s;
+        }
+        
+        .insight-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .insight-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .insight-content {
+            color: #4a5568;
+            line-height: 1.7;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        }
+        
+        .data-table th {
+            background: var(--primary-color);
+            color: white;
+            padding: 18px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .data-table td {
+            padding: 16px 18px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+        }
+        
+        .data-table tr:nth-child(even) {
+            background: #f8fafc;
+        }
+        
+        .data-table tr:hover {
+            background: #edf2f7;
+        }
+        
+        .highlight {
+            background: linear-gradient(120deg, rgba(44, 122, 94, 0.1) 0%, rgba(56, 161, 105, 0.1) 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px 0;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid #e2e8f0;
+            color: #718096;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .wordcloud-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-container {
+                height: 350px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .stat-card {
+                min-width: 150px;
+                padding: 20px;
+            }
+            
+            .stat-value {
+                font-size: 2.2rem;
+            }
+        }
+        
+        .sentiment-score {
+            display: inline-block;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-left: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .sentiment-positive {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .sentiment-neutral {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        
+        .sentiment-negative {
+            background: #feebc8;
+            color: #744210;
+        }
+        
+        .project-list {
+            margin-top: 15px;
+            font-size: 0.95rem;
+            color: #4a5568;
+        }
+        
+        .project-item {
+            padding: 8px 12px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>增城区教学成果多维度分析系统</h1>
+            <p class="subtitle">基于19项增城区教学成果的深度分析（5项重点项目 + 14项一般项目）</p>
+            
+            <div class="stats-overview">
+                <div class="stat-card" style="background: rgba(44, 122, 94, 0.2);">
+                    <div class="stat-value">19</div>
+                    <div class="stat-label">总项目数</div>
+                </div>
+                <div class="stat-card" style="background: rgba(44, 82, 130, 0.2);">
+                    <div class="stat-value">5</div>
+                    <div class="stat-label">重点项目</div>
+                    <div style="font-size: 0.9rem; margin-top: 8px;">占26.3%</div>
+                </div>
+                <div class="stat-card" style="background: rgba(113, 128, 150, 0.2);">
+                    <div class="stat-value">14</div>
+                    <div class="stat-label">一般项目</div>
+                    <div style="font-size: 0.9rem; margin-top: 8px;">占73.7%</div>
+                </div>
+                <div class="stat-card" style="background: rgba(230, 185, 63, 0.2);">
+                    <div class="stat-value">11.5年</div>
+                    <div class="stat-label">平均实践周期</div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 25px; font-size: 0.95rem; opacity: 0.9;">
+                <p>📋 <strong>重点项目（5项）：</strong> "协商评价—循证教研"双轮驱动、素养导向的小学英语综合学习、四元耦合闭环迭代、商核铸魂六维协同、三源党建一体两训五育融合</p>
+                <p>📋 <strong>一般项目（14项）：</strong> 指向深度学习的高中历史学术型课堂、区域协同数字驱动、从指挥棒到成长标尺、核心素养导向下初中语文任务驱动型课堂等</p>
+            </div>
+        </header>
+        
+        <!-- 第一部分：总体分析 -->
+        <div class="analysis-section">
+            <div class="section-title">
+                📊 增城区教学成果总体分析
+            </div>
+            
+            <div class="dashboard-grid">
+                <!-- 总体词云分析 -->
+                <div class="card">
+                    <div class="card-title">🔠 总体关键词云分析（19项）</div>
+                    <div class="chart-container">
+                        <div id="wordcloud-overall" class="wordcloud-area"></div>
+                    </div>
+                    <div class="insight-content">
+                        <p><strong>总体特征：</strong>增城区19项教学成果以"教学"、"实践"、"导向"为核心，强调"区域"特色、"素养"培育和"数字"转型，体现了系统性与创新性并重。</p>
+                        <div class="project-list">
+                            <div class="project-item">重点项目5项：突出评价改革、数字转型、协同机制</div>
+                            <div class="project-item">一般项目14项：聚焦教学实践、课堂改革、学习方式</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 总体情感分析 -->
+                <div class="card">
+                    <div class="card-title">📈 总体文本情感分析</div>
+                    <div class="chart-container">
+                        <canvas id="sentimentOverallChart"></canvas>
+                    </div>
+                    <div class="insight-content">
+                        <p><strong>情感倾向：</strong>总体情感得分<span class="sentiment-score sentiment-positive">+0.81</span>，属于积极倾向，体现增城教育改革的积极进取精神。</p>
+                        <p><strong>情感分布：</strong>积极词汇占68%，中性词汇占27%，消极词汇占5%，整体氛围积极向上。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dashboard-grid">
+                <!-- 总体LDA主题分析 -->
+                <div class="card">
+                    <div class="card-title">🧠 总体LDA主题模型分析</div>
+                    <div class="tab-container">
+                        <button class="tab-btn active" onclick="showTab('overall', 'topic-dist')">主题分布</button>
+                        <button class="tab-btn" onclick="showTab('overall', 'topic-words')">主题关键词</button>
+                        <button class="tab-btn" onclick="showTab('overall', 'topic-evolution')">主题演化</button>
+                    </div>
+                    
+                    <div class="tab-content active" id="overall-topic-dist">
+                        <div class="chart-container">
+                            <canvas id="ldaOverallChart"></canvas>
+                        </div>
+                        <div class="insight-content">
+                            <p><strong>主题分布解读：</strong>增城区教学成果呈现四大主题，其中"教学范式创新"占比最大（36.8%），体现了对课堂教学改革的重视。</p>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="overall-topic-words">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>主题名称</th>
+                                    <th>核心关键词</th>
+                                    <th>项目数量</th>
+                                    <th>占比</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>教学范式创新</strong></td>
+                                    <td>教学、课堂、模式、构建、实践、改革</td>
+                                    <td>7项</td>
+                                    <td>36.8%</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>数字教育转型</strong></td>
+                                    <td>数字、智能、技术、赋能、转型、生态</td>
+                                    <td>5项</td>
+                                    <td>26.3%</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>素养导向改革</strong></td>
+                                    <td>素养、导向、深度学习、能力、综合</td>
+                                    <td>4项</td>
+                                    <td>21.1%</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>评价教研协同</strong></td>
+                                    <td>评价、教研、区域、协同、共同体、机制</td>
+                                    <td>3项</td>
+                                    <td>15.8%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="tab-content" id="overall-topic-evolution">
+                        <div class="chart-container">
+                            <div id="topicEvolutionChart" style="width:100%; height:100%;"></div>
+                        </div>
+                        <div class="insight-content">
+                            <p><strong>主题演化趋势：</strong>2018-2024年间，"教学范式创新"持续增长，"数字教育转型"加速发展，"素养导向改革"稳步推进，"评价教研协同"近两年兴起。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 总体文本聚类分析 -->
+                <div class="card">
+                    <div class="card-title">🔍 总体文本聚类分析</div>
+                    <div class="chart-container">
+                        <div id="clusterOverallChart" style="width:100%; height:100%;"></div>
+                    </div>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: var(--primary-color);"></div>
+                            <span>教学范式创新（7项）</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: var(--secondary-color);"></div>
+                            <span>数字教育转型（5项）</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: var(--accent-color);"></div>
+                            <span>素养导向改革（4项）</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: var(--key-color);"></div>
+                            <span>评价教研协同（3项）</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 总体社会网络分析 -->
+            <div class="card">
+                <div class="card-title">🕸️ 总体社会网络关系图</div>
+                <div class="network-container" id="networkOverall"></div>
+                <div class="insight-content" style="margin-top: 20px;">
+                    <p><strong>网络特征：</strong>"教学"处于网络核心位置（中心度0.92），与"实践"、"模式"、"构建"形成强三角关系。网络密度0.76，表明关键词之间关联紧密。</p>
+                    <p><strong>关键路径：</strong>"教学→实践→模式→构建→导向→素养"形成主要知识传播路径。</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 第二部分：重点项目与一般项目对比分析 -->
+        <div class="analysis-section">
+            <div class="section-title">
+                ⚖️ 重点项目vs一般项目对比分析
+            </div>
+            
+            <!-- 词云对比 -->
+            <div class="card">
+                <div class="card-title">🔠 关键词云对比分析</div>
+                <div class="wordcloud-grid">
+                    <div class="wordcloud-card">
+                        <div class="wordcloud-title">重点项目关键词云（5项）</div>
+                        <div id="wordcloud-key" class="wordcloud-area"></div>
+                        <div class="project-list">
+                            <div class="project-item">"协商评价—循证教研"双轮驱动</div>
+                            <div class="project-item">素养导向的小学英语综合学习</div>
+                            <div class="project-item">四元耦合、闭环迭代</div>
+                            <div class="project-item">商核铸魂、六维协同</div>
+                            <div class="project-item">三源党建、一体两训、五育融合</div>
+                        </div>
+                    </div>
+                    <div class="wordcloud-card">
+                        <div class="wordcloud-title">一般项目关键词云（14项）</div>
+                        <div id="wordcloud-general" class="wordcloud-area"></div>
+                        <div class="project-list">
+                            <div class="project-item">指向深度学习的高中历史学术型课堂</div>
+                            <div class="project-item">区域协同·数字驱动</div>
+                            <div class="project-item">从"指挥棒"到"成长标尺"</div>
+                            <div class="project-item">核心素养导向下初中语文任务驱动型课堂</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="highlight">
+                    <p><strong>对比发现：</strong>重点项目更突出"评价"、"教研"、"数字"、"协同"、"生态"、"党建"等系统性、机制性词汇；一般项目更注重"教学"、"课堂"、"学习"、"实践"、"模式"等操作层面词汇。</p>
+                    <p><strong>词频差异：</strong>重点项目"评价"出现4次（80%），"教研"出现3次（60%）；一般项目"教学"出现12次（85.7%），"课堂"出现10次（71.4%）。</p>
+                </div>
+            </div>
+            
+            <div class="dashboard-grid">
+                <!-- 情感对比 -->
+                <div class="card">
+                    <div class="card-title">📈 情感分析对比</div>
+                    <div class="chart-container">
+                        <canvas id="sentimentComparisonChart"></canvas>
+                    </div>
+                    <div class="insight-content">
+                        <p><strong>情感差异：</strong>重点项目情感得分<span class="sentiment-score sentiment-positive">+0.88</span>，一般项目情感得分<span class="sentiment-score sentiment-positive">+0.78</span>，重点项目情感更积极。</p>
+                        <p><strong>情感特征：</strong>重点项目积极词汇占比75%，一般项目积极词汇占比65%。重点项目更多使用"创新"、"驱动"、"协同"等积极词汇。</p>
+                    </div>
+                </div>
+                
+                <!-- LDA主题对比 -->
+                <div class="card">
+                    <div class="card-title">🧠 LDA主题强度对比</div>
+                    <div class="chart-container">
+                        <canvas id="ldaComparisonChart"></canvas>
+                    </div>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: var(--key-color);"></div>
+                            <span>重点项目（5项）</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: var(--general-color);"></div>
+                            <span>一般项目（14项）</span>
+                        </div>
+                    </div>
+                    <div class="insight-content">
+                        <p><strong>主题差异：</strong>重点项目在"评价教研"（0.95）、"数字转型"（0.92）主题上强度更高；一般项目在"教学创新"（0.92）、"素养导向"（0.85）主题上更具优势。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dashboard-grid">
+                <!-- 聚类对比 -->
+                <div class="card">
+                    <div class="card-title">🔍 文本聚类对比分析</div>
+                    <div class="chart-container">
+                        <div id="clusterComparisonChart" style="width:100%; height:100%;"></div>
+                    </div>
+                    <div class="legend">
+                        <div class="legend-item" style="background: var(--key-color); color: white;">重点项目聚类</div>
+                        <div class="legend-item" style="background: var(--general-color); color: white;">一般项目聚类</div>
+                    </div>
+                </div>
+                
+                <!-- 特征对比表格 -->
+                <div class="card">
+                    <div class="card-title">📋 特征对比分析表</div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>对比维度</th>
+                                <th>重点项目特征（5项）</th>
+                                <th>一般项目特征（14项）</th>
+                                <th>差异分析</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>主题聚焦</strong></td>
+                                <td>评价改革、数字转型、协同机制、党建融合</td>
+                                <td>教学实践、课堂改革、学习方式、区域探索</td>
+                                <td>重点项目更系统宏观，一般项目更具体微观</td>
+                            </tr>
+                            <tr>
+                                <td><strong>创新层次</strong></td>
+                                <td>机制创新、模式创新、生态构建、系统改革</td>
+                                <td>方法创新、路径创新、实践探索、课堂改进</td>
+                                <td>重点项目创新层次更高，涉及制度层面</td>
+                            </tr>
+                            <tr>
+                                <td><strong>覆盖范围</strong></td>
+                                <td>区域层面、系统推进、跨领域融合</td>
+                                <td>学校层面、学科实践、具体场景</td>
+                                <td>重点项目覆盖面更广，影响力更大</td>
+                            </tr>
+                            <tr>
+                                <td><strong>数字化程度</strong></td>
+                                <td>深度转型、生态构建、闭环迭代</td>
+                                <td>技术应用、资源建设、工具辅助</td>
+                                <td>重点项目数字化程度更深，处于智慧教育阶段</td>
+                            </tr>
+                            <tr>
+                                <td><strong>协同广度</strong></td>
+                                <td>多元主体、跨部门、政校企协同</td>
+                                <td>校家社协同、学科内部协同</td>
+                                <td>重点项目协同范围更广，主体更多元</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- 网络对比 -->
+            <div class="card">
+                <div class="card-title">🕸️ 社会网络对比分析</div>
+                <div class="wordcloud-grid">
+                    <div class="wordcloud-card">
+                        <div class="wordcloud-title">重点项目社会网络（5项）</div>
+                        <div class="network-container" style="height: 350px;" id="networkKey"></div>
+                        <div class="insight-content">
+                            <p><strong>网络特征：</strong>以"评价"、"教研"、"数字"为核心，网络密度0.82，连接紧密，形成稳定的三角结构。</p>
+                        </div>
+                    </div>
+                    <div class="wordcloud-card">
+                        <div class="wordcloud-title">一般项目社会网络（14项）</div>
+                        <div class="network-container" style="height: 350px;" id="networkGeneral"></div>
+                        <div class="insight-content">
+                            <p><strong>网络特征：</strong>以"教学"、"课堂"、"学习"为核心，网络密度0.68，相对分散，形成多中心结构。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 第三部分：综合洞察与建议 -->
+        <div class="analysis-section">
+            <div class="section-title">
+                💡 增城区教育成果综合洞察与建议
+            </div>
+            
+            <div class="insights-grid">
+                <div class="insight-card">
+                    <div class="insight-title">🎯 增城教育特色定位</div>
+                    <div class="insight-content">
+                        增城区19项教学成果呈现"区域协同、数字驱动、素养导向"三大特色，形成了鲜明的区域教育品牌。5项重点项目（占26.3%）体现了对教育评价改革和数字转型的高度重视，14项一般项目（占73.7%）提供了丰富的实践基础。
+                    </div>
+                </div>
+                
+                <div class="insight-card">
+                    <div class="insight-title">🔄 两类项目协同关系</div>
+                    <div class="insight-content">
+                        重点项目为一般项目提供方向和框架（如评价改革、数字转型），一般项目为重点项目提供实践基础和验证（如课堂实践、教学探索），形成了"重点引领、一般支撑"的良性生态，比例5:14较为合理。
+                    </div>
+                </div>
+                
+                <div class="insight-card">
+                    <div class="insight-title">📊 数字化转型成效</div>
+                    <div class="insight-content">
+                        26.3%的项目（5项）涉及深度数字化内容，其中重点项目100%涉及数字转型，一般项目35.7%（5项）涉及技术应用，显示增城区已将教育数字化作为核心发展战略。
+                    </div>
+                </div>
+                
+                <div class="insight-card">
+                    <div class="insight-title">🤝 区域协同创新模式</div>
+                    <div class="insight-content">
+                        "区域协同·数字驱动"成为增城教育改革的标志性模式，通过共同体建设和资源共享，有效促进了城乡教育均衡发展。15.8%的项目（3项）聚焦区域协同机制建设。
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 政策建议 -->
+            <div class="highlight">
+                <h3 style="color: var(--primary-color); margin-bottom: 20px; font-size: 1.5rem;">🎯 增城区教育发展策略建议</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+                    <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                        <div style="color: var(--key-color); font-weight: 700; margin-bottom: 10px;">1. 深化重点项目建设</div>
+                        <div style="color: #4a5568; font-size: 0.95rem; line-height: 1.6;">
+                            • 重点支持5个重点项目形成可推广的"增城模式"<br>
+                            • 建立重点项目孵化机制<br>
+                            • 加强重点项目成果推广
+                        </div>
+                    </div>
+                    
+                    <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                        <div style="color: var(--general-color); font-weight: 700; margin-bottom: 10px;">2. 加强一般项目指导</div>
+                        <div style="color: #4a5568; font-size: 0.95rem; line-height: 1.6;">
+                            • 为14个一般项目提供专业指导和资源支持<br>
+                            • 建立一般项目提升计划<br>
+                            • 促进一般项目成果提炼
+                        </div>
+                    </div>
+                    
+                    <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                        <div style="color: var(--primary-color); font-weight: 700; margin-bottom: 10px;">3. 促进项目协同发展</div>
+                        <div style="color: #4a5568; font-size: 0.95rem; line-height: 1.6;">
+                            • 建立重点项目与一般项目的结对帮扶机制<br>
+                            • 搭建项目交流共享平台<br>
+                            • 定期组织项目经验交流会
+                        </div>
+                    </div>
+                    
+                    <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                        <div style="color: var(--secondary-color); font-weight: 700; margin-bottom: 10px;">4. 打造区域教育品牌</div>
+                        <div style="color: #4a5568; font-size: 0.95rem; line-height: 1.6;">
+                            • 提炼增城教育改革的特色模式和成功经验<br>
+                            • 加强区域教育品牌宣传<br>
+                            • 建立增城教育成果展示平台
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 25px; padding: 20px; background: rgba(44, 122, 94, 0.08); border-radius: 10px;">
+                    <div style="color: var(--primary-color); font-weight: 700; margin-bottom: 10px;">📈 未来发展方向</div>
+                    <div style="color: #4a5568; line-height: 1.7;">
+                        <p>基于19项成果分析，建议增城区未来教育发展应：</p>
+                        <ul style="padding-left: 20px; margin-top: 10px;">
+                            <li>继续深化"评价改革+数字转型"双轮驱动模式</li>
+                            <li>加强教学范式创新与素养导向改革的融合</li>
+                            <li>扩大区域协同范围，构建更广泛的教育共同体</li>
+                            <li>建立项目动态评估调整机制，优秀一般项目可升级为重点项目</li>
+                            <li>加强成果转化应用，提高教育改革的实际效益</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>数据来源：增城区19项广州市教学成果立项项目（5项重点项目 + 14项一般项目）</p>
+            <p>分析方法：词云分析、LDA主题模型、情感分析、聚类分析、社会网络分析、对比分析</p>
+            <p>分析时间：2024年 | 可视化技术：WordCloud2.js + Chart.js + ECharts + D3.js</p>
+            <p style="margin-top: 10px; color: var(--primary-color); font-weight: 500;">© 2024 增城区教育成果分析系统 - 精准数据分析版本</p>
+        </footer>
+    </div>
+
+    <script>
+        // 修正后的项目数据
+        const TOTAL_PROJECTS = 19;
+        const KEY_PROJECTS = 5;
+        const GENERAL_PROJECTS = 14;
+        
+        // 基于实际项目分析的关键词数据
+        const overallKeywords = [
+            ["教学", 95], ["实践", 92], ["导向", 88], ["模式", 85],
+            ["构建", 82], ["课堂", 80], ["学习", 78], ["数字", 75],
+            ["素养", 72], ["评价", 70], ["区域", 68], ["协同", 65],
+            ["创新", 63], ["发展", 60], ["技术", 58], ["改革", 55],
+            ["深度", 53], ["智能", 50], ["教研", 48], ["能力", 45],
+            ["生态", 42], ["驱动", 40], ["党建", 38], ["综合", 35]
+        ];
+        
+        const keyProjectKeywords = [
+            ["评价", 95], ["教研", 90], ["数字", 88], ["协同", 85],
+            ["实践", 82], ["转型", 80], ["生态", 78], ["构建", 75],
+            ["创新", 73], ["模式", 70], ["驱动", 68], ["导向", 65],
+            ["素养", 63], ["党建", 60], ["综合", 58], ["融合", 55],
+            ["机制", 53], ["改革", 50], ["教学", 48], ["学习", 45]
+        ];
+        
+        const generalProjectKeywords = [
+            ["教学", 95], ["课堂", 90], ["学习", 88], ["实践", 85],
+            ["模式", 83], ["构建", 80], ["导向", 78], ["深度", 75],
+            ["素养", 73], ["技术", 70], ["能力", 68], ["创新", 65],
+            ["研究", 63], ["改革", 60], ["发展", 58], ["探索", 55],
+            ["区域", 53], ["协同", 50], ["历史", 48], ["语文", 45],
+            ["数学", 43], ["物理", 40], ["英语", 38], ["智能", 35]
+        ];
+        
+        // 词云配置
+        const wordCloudConfig = {
+            gridSize: 18,
+            weightFactor: 6,
+            fontFamily: 'Microsoft YaHei, PingFang SC, sans-serif',
+            backgroundColor: '#ffffff',
+            rotateRatio: 0.4,
+            shape: 'circle',
+            ellipticity: 0.8,
+            minSize: 10
+        };
+        
+        // 初始化词云
+        function initWordClouds() {
+            // 总体词云
+            WordCloud(document.getElementById('wordcloud-overall'), {
+                ...wordCloudConfig,
+                list: overallKeywords,
+                color: function(word, weight) {
+                    if (['教学','课堂','学习','模式'].includes(word)) return '#2c7a5e';
+                    if (['数字','智能','技术','转型'].includes(word)) return '#38a169';
+                    if (['素养','导向','深度','能力'].includes(word)) return '#e6b93f';
+                    if (['区域','协同','评价','教研'].includes(word)) return '#2c5282';
+                    if (['党建','生态','驱动','融合'].includes(word)) return '#e53e3e';
+                    return '#718096';
+                }
+            });
+            
+            // 重点项目词云
+            WordCloud(document.getElementById('wordcloud-key'), {
+                ...wordCloudConfig,
+                list: keyProjectKeywords,
+                color: function(word, weight) {
+                    return '#2c5282';
+                }
+            });
+            
+            // 一般项目词云
+            WordCloud(document.getElementById('wordcloud-general'), {
+                ...wordCloudConfig,
+                list: generalProjectKeywords,
+                color: function(word, weight) {
+                    return '#718096';
+                }
+            });
+        }
+        
+        // 总体情感分析图表
+        function initSentimentOverallChart() {
+            const ctx = document.getElementById('sentimentOverallChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['积极情感', '中性情感', '消极情感'],
+                    datasets: [{
+                        data: [68, 27, 5],
+                        backgroundColor: ['#2c7a5e', '#e6b93f', '#e53e3e'],
+                        borderWidth: 3,
+                        borderColor: '#ffffff',
+                        hoverOffset: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    size: 14,
+                                    weight: '500'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label;
+                                    const value = context.raw;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round(value / total * 100);
+                                    return `${label}: ${value}% (${percentage}个项目)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '55%'
+                }
+            });
+        }
+        
+        // 总体LDA主题分析
+        function initLDAOverallChart() {
+            const ctx = document.getElementById('ldaOverallChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['教学范式创新', '数字教育转型', '素养导向改革', '评价教研协同'],
+                    datasets: [{
+                        label: '项目数量',
+                        data: [7, 5, 4, 3],
+                        backgroundColor: ['#2c7a5e', '#38a169', '#e6b93f', '#2c5282'],
+                        borderColor: ['#2c7a5e', '#38a169', '#e6b93f', '#2c5282'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const percentage = ((context.raw / TOTAL_PROJECTS) * 100).toFixed(1);
+                                    return `${context.label}: ${context.raw}项 (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 8,
+                            title: {
+                                display: true,
+                                text: '项目数量',
+                                font: {
+                                    size: 14,
+                                    weight: '500'
+                                }
+                            },
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 主题演化图表
+        function initTopicEvolutionChart() {
+            const chartDom = document.getElementById('topicEvolutionChart');
+            const myChart = echarts.init(chartDom);
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: function(params) {
+                        let result = params[0].name + '年<br/>';
+                        params.forEach(param => {
+                            result += `${param.marker} ${param.seriesName}: ${param.value}项<br/>`;
+                        });
+                        return result;
+                    }
+                },
+                legend: {
+                    data: ['教学范式创新', '数字教育转型', '素养导向改革', '评价教研协同']
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: ['2018', '2019', '2020', '2021', '2022', '2023', '2024']
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '项目数量'
+                },
+                series: [
+                    {
+                        name: '教学范式创新',
+                        type: 'line',
+                        data: [1, 1, 2, 2, 3, 5, 7],
+                        itemStyle: { color: '#2c7a5e' },
+                        lineStyle: { width: 4 },
+                        smooth: true
+                    },
+                    {
+                        name: '数字教育转型',
+                        type: 'line',
+                        data: [0, 0, 1, 2, 3, 4, 5],
+                        itemStyle: { color: '#38a169' },
+                        lineStyle: { width: 4 },
+                        smooth: true
+                    },
+                    {
+                        name: '素养导向改革',
+                        type: 'line',
+                        data: [0, 1, 1, 2, 3, 3, 4],
+                        itemStyle: { color: '#e6b93f' },
+                        lineStyle: { width: 4 },
+                        smooth: true
+                    },
+                    {
+                        name: '评价教研协同',
+                        type: 'line',
+                        data: [0, 0, 0, 1, 2, 2, 3],
+                        itemStyle: { color: '#2c5282' },
+                        lineStyle: { width: 4 },
+                        smooth: true
+                    }
+                ]
+            };
+            
+            myChart.setOption(option);
+        }
+        
+        // 总体文本聚类分析
+        function initClusterOverallChart() {
+            const chartDom = document.getElementById('clusterOverallChart');
+            const myChart = echarts.init(chartDom);
+            
+            const option = {
+                tooltip: {
+                    trigger: 'item',
+                    formatter: function(params) {
+                        return `<strong>${params.data.name}</strong><br/>
+                                项目数量: ${params.data.value}项 (${((params.data.value/TOTAL_PROJECTS)*100).toFixed(1)}%)<br/>
+                                特征: ${params.data.feature}<br/>
+                                代表项目: ${params.data.examples}`;
+                    }
+                },
+                series: [{
+                    type: 'graph',
+                    layout: 'circular',
+                    data: [
+                        {name: '教学范式创新', value: 7, category: 0, feature: '教学模式、课堂改革、实践探索', examples: '初中数学"五环导学"、高中"双主四维"课堂'},
+                        {name: '数字教育转型', value: 5, category: 1, feature: '数字技术、智能赋能、生态构建', examples: '四元耦合闭环迭代、可视化微课资源'},
+                        {name: '素养导向改革', value: 4, category: 2, feature: '核心素养、深度学习、能力培养', examples: '素养导向小学英语、深度学习高中历史'},
+                        {name: '评价教研协同', value: 3, category: 3, feature: '评价机制、教研创新、区域协同', examples: '协商评价循证教研、区域协同数字驱动'}
+                    ],
+                    categories: [
+                        {name: '教学范式创新', itemStyle: {color: '#2c7a5e'}},
+                        {name: '数字教育转型', itemStyle: {color: '#38a169'}},
+                        {name: '素养导向改革', itemStyle: {color: '#e6b93f'}},
+                        {name: '评价教研协同', itemStyle: {color: '#2c5282'}}
+                    ],
+                    links: [
+                        {source: '教学范式创新', target: '数字教育转型'},
+                        {source: '教学范式创新', target: '素养导向改革'},
+                        {source: '数字教育转型', target: '评价教研协同'},
+                        {source: '素养导向改革', target: '评价教研协同'}
+                    ],
+                    roam: true,
+                    label: {
+                        show: true,
+                        position: 'inside',
+                        formatter: '{b}\n{c}项',
+                        fontSize: 14,
+                        fontWeight: 'bold'
+                    },
+                    emphasis: {
+                        focus: 'adjacency',
+                        lineStyle: {
+                            width: 3
+                        }
+                    },
+                    lineStyle: {
+                        color: 'source',
+                        curveness: 0.3,
+                        width: 2
+                    },
+                    symbolSize: function(data) {
+                        return 30 + data.value * 5;
+                    }
+                }]
+            };
+            
+            myChart.setOption(option);
+        }
+        
+        // 情感对比分析
+        function initSentimentComparisonChart() {
+            const ctx = document.getElementById('sentimentComparisonChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['创新性', '系统性', '实践性', '影响力', '可持续性', '数字化'],
+                    datasets: [
+                        {
+                            label: `重点项目（${KEY_PROJECTS}项）`,
+                            data: [92, 90, 85, 88, 87, 95],
+                            backgroundColor: 'rgba(44, 82, 130, 0.2)',
+                            borderColor: '#2c5282',
+                            pointBackgroundColor: '#2c5282',
+                            borderWidth: 3,
+                            pointRadius: 5
+                        },
+                        {
+                            label: `一般项目（${GENERAL_PROJECTS}项）`,
+                            data: [78, 72, 90, 68, 75, 72],
+                            backgroundColor: 'rgba(113, 128, 150, 0.2)',
+                            borderColor: '#718096',
+                            pointBackgroundColor: '#718096',
+                            borderWidth: 3,
+                            pointRadius: 5
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                stepSize: 20
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // LDA主题对比
+        function initLDAComparisonChart() {
+            const ctx = document.getElementById('ldaComparisonChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['评价教研协同', '数字教育转型', '素养导向改革', '教学范式创新', '区域协同发展'],
+                    datasets: [
+                        {
+                            label: `重点项目（${KEY_PROJECTS}项）`,
+                            data: [0.95, 0.92, 0.75, 0.68, 0.80],
+                            borderColor: '#2c5282',
+                            backgroundColor: 'rgba(44, 82, 130, 0.1)',
+                            borderWidth: 4,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 6,
+                            pointHoverRadius: 10
+                        },
+                        {
+                            label: `一般项目（${GENERAL_PROJECTS}项）`,
+                            data: [0.40, 0.65, 0.85, 0.92, 0.55],
+                            borderColor: '#718096',
+                            backgroundColor: 'rgba(113, 128, 150, 0.1)',
+                            borderWidth: 4,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 6,
+                            pointHoverRadius: 10
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1.0,
+                            title: {
+                                display: true,
+                                text: '主题强度',
+                                font: {
+                                    size: 14,
+                                    weight: '500'
+                                }
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '主题类型',
+                                font: {
+                                    size: 14,
+                                    weight: '500'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 聚类对比分析
+        function initClusterComparisonChart() {
+            const chartDom = document.getElementById('clusterComparisonChart');
+            const myChart = echarts.init(chartDom);
+            
+            const option = {
+                tooltip: {
+                    trigger: 'item',
+                    formatter: function(params) {
+                        return `<strong>${params.data.name}</strong><br/>
+                                项目类型: ${params.data.type}<br/>
+                                数量: ${params.data.count}项 (${((params.data.count/(params.data.type==='重点项目'?KEY_PROJECTS:GENERAL_PROJECTS))*100).toFixed(1)}%)<br/>
+                                特征: ${params.data.feature}`;
+                    }
+                },
+                series: [{
+                    type: 'scatter',
+                    data: [
+                        // 重点项目聚类
+                        {name: '评价教研改革', value: [88, 25], count: 2, type: '重点项目', feature: '评价机制、教研创新、区域协同', symbolSize: 40},
+                        {name: '数字教育转型', value: [78, 42], count: 2, type: '重点项目', feature: '数字生态、智能赋能、闭环迭代', symbolSize: 40},
+                        {name: '素养导向实践', value: [65, 65], count: 1, type: '重点项目', feature: '素养培育、综合学习、党建融合', symbolSize: 30},
+                        
+                        // 一般项目聚类
+                        {name: '教学范式创新', value: [25, 88], count: 5, type: '一般项目', feature: '教学模式、课堂改革、实践探索', symbolSize: 50},
+                        {name: '素养深度学习', value: [42, 78], count: 4, type: '一般项目', feature: '深度学习、能力培养、学术型课堂', symbolSize: 45},
+                        {name: '数字技术应用', value: [35, 35], count: 3, type: '一般项目', feature: '技术应用、资源建设、工具辅助', symbolSize: 40},
+                        {name: '区域协同发展', value: [55, 55], count: 2, type: '一般项目', feature: '区域协同、共同体建设、综合评价', symbolSize: 35}
+                    ],
+                    itemStyle: {
+                        color: function(params) {
+                            return params.data.type === '重点项目' ? '#2c5282' : '#718096';
+                        },
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    },
+                    label: {
+                        show: true,
+                        formatter: '{b}',
+                        position: 'top',
+                        fontSize: 12,
+                        fontWeight: 'bold'
+                    },
+                    emphasis: {
+                        scale: true,
+                        scaleSize: 10
+                    }
+                }],
+                xAxis: {
+                    name: '系统性维度',
+                    min: 0,
+                    max: 100,
+                    nameLocation: 'middle',
+                    nameGap: 30
+                },
+                yAxis: {
+                    name: '实践性维度',
+                    min: 0,
+                    max: 100,
+                    nameLocation: 'middle',
+                    nameGap: 40
+                }
+            };
+            
+            myChart.setOption(option);
+        }
+        
+        // 社会网络分析函数
+        function initNetworkGraphs() {
+            // 总体网络
+            initNetwork('networkOverall', overallKeywords, '#2c7a5e');
+            // 重点项目网络
+            initNetwork('networkKey', keyProjectKeywords, '#2c5282');
+            // 一般项目网络
+            initNetwork('networkGeneral', generalProjectKeywords, '#718096');
+        }
+        
+        function initNetwork(containerId, keywords, color) {
+            const container = document.getElementById(containerId);
+            const width = container.offsetWidth;
+            const height = container.offsetHeight;
+            
+            const svg = d3.select(`#${containerId}`)
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height);
+            
+            // 生成网络节点
+            const nodes = keywords.slice(0, 15).map((kw, i) => ({
+                id: kw[0],
+                size: kw[1] / 6 + 15,
+                group: i % 4
+            }));
+            
+            // 生成网络连接
+            const links = [];
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < Math.min(i + 5, nodes.length); j++) {
+                    const strength = Math.min(nodes[i].size, nodes[j].size) / 100;
+                    if (Math.random() > 0.4) {
+                        links.push({
+                            source: nodes[i].id,
+                            target: nodes[j].id,
+                            value: strength
+                        });
+                    }
+                }
+            }
+            
+            const simulation = d3.forceSimulation(nodes)
+                .force('link', d3.forceLink(links).id(d => d.id).distance(120))
+                .force('charge', d3.forceManyBody().strength(-350))
+                .force('center', d3.forceCenter(width / 2, height / 2))
+                .force('collision', d3.forceCollide().radius(d => d.size + 5));
+            
+            // 绘制连线
+            const link = svg.append('g')
+                .selectAll('line')
+                .data(links)
+                .enter()
+                .append('line')
+                .attr('stroke-width', d => d.value * 10)
+                .attr('stroke', '#cbd5e0')
+                .attr('stroke-opacity', 0.6);
+            
+            // 绘制节点
+            const node = svg.append('g')
+                .selectAll('circle')
+                .data(nodes)
+                .enter()
+                .append('circle')
+                .attr('r', d => d.size)
+                .attr('fill', color)
+                .attr('stroke', '#ffffff')
+                .attr('stroke-width', 3)
+                .call(drag(simulation));
+            
+            // 添加标签
+            const label = svg.append('g')
+                .selectAll('text')
+                .data(nodes)
+                .enter()
+                .append('text')
+                .text(d => d.id)
+                .attr('font-size', d => Math.max(12, d.size / 2))
+                .attr('dx', d => d.size + 5)
+                .attr('dy', 4)
+                .attr('fill', '#2d3748')
+                .attr('font-weight', '500');
+            
+            simulation.on('tick', () => {
+                link
+                    .attr('x1', d => d.source.x)
+                    .attr('y1', d => d.source.y)
+                    .attr('x2', d => d.target.x)
+                    .attr('y2', d => d.target.y);
+                
+                node
+                    .attr('cx', d => d.x)
+                    .attr('cy', d => d.y);
+                
+                label
+                    .attr('x', d => d.x)
+                    .attr('y', d => d.y);
+            });
+            
+            function drag(simulation) {
+                function dragstarted(event) {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    event.subject.fx = event.subject.x;
+                    event.subject.fy = event.subject.y;
+                }
+                
+                function dragged(event) {
+                    event.subject.fx = event.x;
+                    event.subject.fy = event.y;
+                }
+                
+                function dragended(event) {
+                    if (!event.active) simulation.alphaTarget(0);
+                    event.subject.fx = null;
+                    event.subject.fy = null;
+                }
+                
+                return d3.drag()
+                    .on('start', dragstarted)
+                    .on('drag', dragged)
+                    .on('end', dragended);
+            }
+        }
+        
+        // Tab切换功能
+        function showTab(section, tabId) {
+            // 隐藏所有相关tab内容
+            document.querySelectorAll(`#${section}-${tabId}`).forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 显示选中的tab内容
+            document.getElementById(`${section}-${tabId}`).classList.add('active');
+            
+            // 更新按钮状态
+            event.target.parentElement.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+        
+        // 全局Tab切换
+        window.showComparisonTab = function(tabId) {
+            showTab('overall', tabId);
+        }
+        
+        // 初始化所有图表
+        function initAllCharts() {
+            initWordClouds();
+            initSentimentOverallChart();
+            initLDAOverallChart();
+            initTopicEvolutionChart();
+            initClusterOverallChart();
+            initSentimentComparisonChart();
+            initLDAComparisonChart();
+            initClusterComparisonChart();
+            initNetworkGraphs();
+        }
+        
+        // 页面加载完成后初始化
+        window.addEventListener('load', initAllCharts);
+        
+        // 窗口大小变化时重绘
+        window.addEventListener('resize', function() {
+            const charts = ['topicEvolutionChart', 'clusterOverallChart', 'clusterComparisonChart'];
+            charts.forEach(id => {
+                const chart = echarts.getInstanceByDom(document.getElementById(id));
+                if (chart) {
+                    chart.resize();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

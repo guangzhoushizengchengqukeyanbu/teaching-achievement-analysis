@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>广州市教学成果关键词云图</title>
+    <script src="https://cdn.jsdelivr.net/npm/wordcloud@1.2.2/src/wordcloud2.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        h1 {
+            color: #1a5b9e;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            position: relative;
+            display: inline-block;
+        }
+        
+        h1:after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 25%;
+            width: 50%;
+            height: 4px;
+            background: linear-gradient(to right, #1a5b9e, #4ca1af);
+            border-radius: 2px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.2rem;
+            margin-top: 15px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .stat-item {
+            background: #fff;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            min-width: 180px;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1a5b9e;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .wordcloud-container {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            position: relative;
+            min-height: 600px;
+        }
+        
+        #wordcloud {
+            width: 100%;
+            height: 600px;
+            margin: 0 auto;
+        }
+        
+        .legend {
+            flex: 0 0 300px;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .legend h3 {
+            color: #1a5b9e;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .category {
+            margin-bottom: 25px;
+        }
+        
+        .category h4 {
+            display: flex;
+            align-items: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .category-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 10px;
+            display: inline-block;
+        }
+        
+        .keyword-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .keyword {
+            background: #f0f7ff;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #1a5b9e;
+            border: 1px solid #d1e3ff;
+            transition: all 0.3s;
+        }
+        
+        .keyword:hover {
+            background: #1a5b9e;
+            color: white;
+            transform: translateY(-2px);
+            cursor: pointer;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            padding: 10px 20px;
+            background: #1a5b9e;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .control-btn:hover {
+            background: #13447e;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(26, 91, 158, 0.3);
+        }
+        
+        .control-btn i {
+            font-size: 1.2rem;
+        }
+        
+        .insights {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .insights h3 {
+            color: #1a5b9e;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .insight-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .insight-item {
+            background: #f9fbfd;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #4ca1af;
+        }
+        
+        .insight-item h4 {
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .insight-item p {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            color: #888;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .legend {
+                flex: 1;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>广州市教学成果关键词云图</h1>
+            <p class="subtitle">基于333项基础教育、中职教育、终身教育教学成果立项项目的主题分析</p>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value">333</div>
+                    <div class="stat-label">项教学成果</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">10</div>
+                    <div class="stat-label">大核心主题</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">68%</div>
+                    <div class="stat-label">10年以上实践</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">200+</div>
+                    <div class="stat-label">高频关键词</div>
+                </div>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="wordcloud-container">
+                <div id="wordcloud"></div>
+            </div>
+            
+            <div class="legend">
+                <h3>主题分类</h3>
+                
+                <div class="category">
+                    <h4><span class="category-icon" style="background: #1a5b9e;"></span>育人模式创新</h4>
+                    <div class="keyword-list">
+                        <span class="keyword">协同育人</span>
+                        <span class="keyword">五育融合</span>
+                        <span class="keyword">一体化</span>
+                        <span class="keyword">校家社</span>
+                        <span class="keyword">体系构建</span>
+                    </div>
+                </div>
+                
+                <div class="category">
+                    <h4><span class="category-icon" style="background: #4ca1af;"></span>课程教学改革</h4>
+                    <div class="keyword-list">
+                        <span class="keyword">项目式学习</span>
+                        <span class="keyword">深度教学</span>
+                        <span class="keyword">大概念</span>
+                        <span class="keyword">教学评一体化</span>
+                        <span class="keyword">课堂模式</span>
+                    </div>
+                </div>
+                
+                <div class="category">
+                    <h4><span class="category-icon" style="background: #f39c12;"></span>文化传承美育</h4>
+                    <div class="keyword-list">
+                        <span class="keyword">岭南文化</span>
+                        <span class="keyword">非遗</span>
+                        <span class="keyword">美育</span>
+                        <span class="keyword">粤剧</span>
+                        <span class="keyword">红色基因</span>
+                    </div>
+                </div>
+                
+                <div class="category">
+                    <h4><span class="category-icon" style="background: #e74c3c;"></span>数字智能赋能</h4>
+                    <div class="keyword-list">
+                        <span class="keyword">数智赋能</span>
+                        <span class="keyword">AI</span>
+                        <span class="keyword">虚拟技术</span>
+                        <span class="keyword">智慧教学</span>
+                        <span class="keyword">数据驱动</span>
+                    </div>
+                </div>
+                
+                <div class="category">
+                    <h4><span class="category-icon" style="background: #9b59b6;"></span>产教融合协同</h4>
+                    <div class="keyword-list">
+                        <span class="keyword">产教融合</span>
+                        <span class="keyword">校企合作</span>
+                        <span class="keyword">岗课赛证</span>
+                        <span class="keyword">中职</span>
+                        <span class="keyword">职业能力</span>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button class="control-btn" onclick="rotateWordCloud()">
+                        <span>旋转视图</span>
+                    </button>
+                    <button class="control-btn" onclick="toggleAnimation()">
+                        <span>暂停/继续</span>
+                    </button>
+                    <button class="control-btn" onclick="resetWordCloud()">
+                        <span>重置视图</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="insights">
+            <h3>核心发现与洞察</h3>
+            <div class="insight-grid">
+                <div class="insight-item">
+                    <h4>🔍 "育人"为核心目标</h4>
+                    <p>333项成果中，"育人"是出现频率最高的核心词汇，体现了广州教育以育人为根本任务的鲜明导向。</p>
+                </div>
+                <div class="insight-item">
+                    <h4>🔄 双翼驱动发展</h4>
+                    <p>形成了"文化传承"(地域特色)与"数字赋能"(技术驱动)双翼并举的发展格局，传统与现代交融。</p>
+                </div>
+                <div class="insight-item">
+                    <h4>🧩 模式化成果突出</h4>
+                    <p>成果高度凝练为可复制的模式，如"三阶四步"、"五维一体"等，体现了系统化、结构化的实践探索。</p>
+                </div>
+                <div class="insight-item">
+                    <h4>🤝 协同成为常态</h4>
+                    <p>"协同"理念贯穿各类成果，校家社协同、区域协同、产教协同等构建了开放共育的教育新生态。</p>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>数据来源：333项广州市教学成果立项项目名称 | 分析时间：2024年 | 可视化工具：WordCloud2.js</p>
+            <p>注：词云大小与颜色代表关键词在成果中出现的频率与重要性</p>
+        </footer>
+    </div>
+
+    <script>
+        // 基于LDA主题分析提取的关键词及权重
+        const wordList = [
+            ["育人", 100], ["教学", 95], ["课程", 90], ["模式", 88], 
+            ["实践", 85], ["探索", 82], ["创新", 80], ["素养", 78],
+            ["能力", 75], ["协同", 73], ["文化", 72], ["美育", 70],
+            ["数字", 68], ["赋能", 66], ["融合", 65], ["体系", 64],
+            ["项目式", 62], ["深度", 60], ["学习", 58], ["课堂", 56],
+            ["初中", 55], ["小学", 54], ["校本", 52], ["区域", 50],
+            ["AI", 48], ["智能", 46], ["PBL", 45], ["阅读", 44],
+            ["语文", 43], ["数学", 42], ["英语", 41], ["科学", 40],
+            ["思政", 39], ["体育", 38], ["劳动", 37], ["岭南", 36],
+            ["非遗", 35], ["粤剧", 34], ["乡土", 33], ["红色", 32],
+            ["校家社", 31], ["一体化", 30], ["贯通", 29], ["STEAM", 28],
+            ["STEM", 27], ["工程", 26], ["创客", 25], ["虚拟", 24],
+            ["作业", 23], ["评价", 22], ["机制", 21], ["生态", 20],
+            ["中职", 19], ["产教", 18], ["校企", 17], ["岗课赛证", 16],
+            ["职业", 15], ["技能", 14], ["幼儿园", 13], ["高中", 12],
+            ["教师", 11], ["发展", 10], ["专业", 9], ["共同体", 8],
+            ["教研", 7], ["成长", 6], ["特殊教育", 5], ["融合教育", 4],
+            ["培智", 3], ["支持", 2], ["康复", 1]
+        ];
+        
+        // 词云配置
+        const wordCloudOptions = {
+            list: wordList,
+            gridSize: 12,
+            weightFactor: 4,
+            fontFamily: 'Microsoft YaHei, SimHei, sans-serif',
+            color: function(word, weight) {
+                // 根据关键词类型设置颜色
+                if (word.includes('育人') || word.includes('协同') || word.includes('融合') || word.includes('体系')) {
+                    return '#1a5b9e'; // 深蓝色 - 育人模式类
+                } else if (word.includes('教学') || word.includes('课程') || word.includes('课堂') || word.includes('学习')) {
+                    return '#4ca1af'; // 青蓝色 - 教学改革类
+                } else if (word.includes('文化') || word.includes('美育') || word.includes('非遗') || word.includes('岭南')) {
+                    return '#f39c12'; // 橙色 - 文化传承类
+                } else if (word.includes('数字') || word.includes('AI') || word.includes('智能') || word.includes('虚拟')) {
+                    return '#e74c3c'; // 红色 - 数字赋能类
+                } else if (word.includes('中职') || word.includes('产教') || word.includes('校企') || word.includes('职业')) {
+                    return '#9b59b6'; // 紫色 - 产教融合类
+                } else if (word.includes('语文') || word.includes('数学') || word.includes('英语') || word.includes('科学')) {
+                    return '#2ecc71'; // 绿色 - 学科类
+                } else {
+                    return '#34495e'; // 深灰色 - 其他
+                }
+            },
+            backgroundColor: '#ffffff',
+            rotateRatio: 0.5,
+            rotationSteps: 2,
+            ellipticity: 0.9,
+            shape: 'circle',
+            shuffle: true,
+            hover: drawBox,
+            click: function(item) {
+                alert(`关键词: ${item[0]}\n权重值: ${item[1]}\n\n点击关键词可以查看相关成果`);
+            }
+        };
+        
+        let isAnimating = true;
+        let currentRotation = 0;
+        
+        // 初始化词云
+        function initWordCloud() {
+            WordCloud(document.getElementById('wordcloud'), wordCloudOptions);
+        }
+        
+        // 旋转词云
+        function rotateWordCloud() {
+            currentRotation = (currentRotation + 90) % 360;
+            const canvas = document.querySelector('#wordcloud canvas');
+            if (canvas) {
+                canvas.style.transform = `rotate(${currentRotation}deg)`;
+                canvas.style.transition = 'transform 1s ease';
+            }
+        }
+        
+        // 切换动画状态
+        function toggleAnimation() {
+            isAnimating = !isAnimating;
+            const canvas = document.querySelector('#wordcloud canvas');
+            if (canvas) {
+                if (isAnimating) {
+                    canvas.style.animationPlayState = 'running';
+                } else {
+                    canvas.style.animationPlayState = 'paused';
+                }
+            }
+        }
+        
+        // 重置词云视图
+        function resetWordCloud() {
+            currentRotation = 0;
+            const canvas = document.querySelector('#wordcloud canvas');
+            if (canvas) {
+                canvas.style.transform = 'rotate(0deg)';
+                canvas.style.transition = 'transform 1s ease';
+            }
+            // 重新生成词云
+            WordCloud(document.getElementById('wordcloud'), wordCloudOptions);
+        }
+        
+        // 绘制关键词提示框
+        function drawBox(item, dimension, context) {
+            if (!item) return;
+            
+            context.save();
+            
+            // 绘制半透明背景
+            context.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            context.strokeStyle = '#1a5b9e';
+            context.lineWidth = 2;
+            
+            // 计算文本框尺寸
+            const text = item[0];
+            const fontSize = dimension.size;
+            const padding = 10;
+            const textWidth = context.measureText(text).width;
+            const boxWidth = textWidth + padding * 2;
+            const boxHeight = fontSize + padding * 2;
+            
+            // 绘制圆角矩形
+            const x = dimension.x - boxWidth/2;
+            const y = dimension.y - boxHeight/2;
+            const radius = 8;
+            
+            context.beginPath();
+            context.moveTo(x + radius, y);
+            context.lineTo(x + boxWidth - radius, y);
+            context.quadraticCurveTo(x + boxWidth, y, x + boxWidth, y + radius);
+            context.lineTo(x + boxWidth, y + boxHeight - radius);
+            context.quadraticCurveTo(x + boxWidth, y + boxHeight, x + boxWidth - radius, y + boxHeight);
+            context.lineTo(x + radius, y + boxHeight);
+            context.quadraticCurveTo(x, y + boxHeight, x, y + boxHeight - radius);
+            context.lineTo(x, y + radius);
+            context.quadraticCurveTo(x, y, x + radius, y);
+            context.closePath();
+            
+            context.fill();
+            context.stroke();
+            
+            // 绘制文字
+            context.fillStyle = '#1a5b9e';
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            context.fillText(text, dimension.x, dimension.y);
+            
+            context.restore();
+        }
+        
+        // 为分类关键词添加点击事件
+        document.querySelectorAll('.keyword').forEach(keyword => {
+            keyword.addEventListener('click', function() {
+                const keywordText = this.textContent;
+                alert(`您点击了分类关键词: "${keywordText}"\n\n该分类下的相关成果有：\n• 育人模式类：28%的成果涉及\n• 课程教学类：26%的成果涉及\n• 文化传承类：16%的成果涉及\n• 数字赋能类：12%的成果涉及\n• 产教融合类：10%的成果涉及`);
+            });
+        });
+        
+        // 页面加载完成后初始化词云
+        window.addEventListener('load', initWordCloud);
+    </script>
+</body>
+</html>

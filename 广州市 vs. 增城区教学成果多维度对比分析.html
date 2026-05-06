@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>广州市 vs. 增城区教学成果多维度对比分析</title>
+    <script src="https://cdn.jsdelivr.net/npm/wordcloud@1.2.2/src/wordcloud2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        :root {
+            --guangzhou-color: #1a5b9e;
+            --zengcheng-color: #2c7a5e;
+            --comparison-color: #9b59b6;
+            --neutral-color: #718096;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #e9ecef 100%);
+            color: #2d3748;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* 标题区域 */
+        .comparison-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 35px;
+            background: linear-gradient(135deg, #2c3e50 0%, #4a6491 100%);
+            color: white;
+            border-radius: 20px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .comparison-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--guangzhou-color), var(--zengcheng-color));
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.95;
+            max-width: 1000px;
+            margin: 0 auto 25px;
+            line-height: 1.7;
+        }
+        
+        /* 统计概览 */
+        .stats-comparison {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-comparison-card {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            min-width: 220px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s;
+        }
+        
+        .stat-comparison-card:hover {
+            transform: translateY(-8px);
+        }
+        
+        .stat-comparison-card.guangzhou {
+            border-top: 5px solid var(--guangzhou-color);
+        }
+        
+        .stat-comparison-card.zengcheng {
+            border-top: 5px solid var(--zengcheng-color);
+        }
+        
+        .stat-comparison-card.comparison {
+            border-top: 5px solid var(--comparison-color);
+        }
+        
+        .stat-comparison-value {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .stat-comparison-label {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+        
+        .stat-subtext {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        /* 导航标签 */
+        .comparison-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        
+        .comparison-tab-btn {
+            padding: 12px 30px;
+            background: #edf2f7;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #4a5568;
+            font-weight: 600;
+            font-size: 1.1rem;
+            min-width: 180px;
+        }
+        
+        .comparison-tab-btn.active {
+            background: linear-gradient(135deg, var(--guangzhou-color), var(--zengcheng-color));
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        .comparison-tab-btn:hover:not(.active) {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+        
+        /* 对比内容区域 */
+        .comparison-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .comparison-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .comparison-section {
+            margin-bottom: 50px;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #e2e8f0;
+        }
+        
+        .section-title {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section-title i {
+            font-size: 2rem;
+        }
+        
+        /* 对比卡片 */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 35px;
+            margin-bottom: 40px;
+        }
+        
+        .comparison-card {
+            background: white;
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .comparison-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+        }
+        
+        .comparison-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #edf2f7;
+        }
+        
+        .card-title {
+            color: #2c3e50;
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .region-tag {
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-left: 15px;
+        }
+        
+        .region-tag.guangzhou {
+            background: rgba(26, 91, 158, 0.15);
+            color: var(--guangzhou-color);
+        }
+        
+        .region-tag.zengcheng {
+            background: rgba(44, 122, 94, 0.15);
+            color: var(--zengcheng-color);
+        }
+        
+        /* 图表容器 */
+        .comparison-chart-container {
+            height: 400px;
+            width: 100%;
+            position: relative;
+        }
+        
+        .dual-chart-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            height: 400px;
+        }
+        
+        .dual-chart {
+            height: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            background: white;
+            padding: 20px;
+        }
+        
+        /* 词云对比 - 修复的样式 */
+        .wordcloud-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        .wordcloud-region {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            height: 550px; /* 固定高度确保词云有足够空间 */
+        }
+        
+        .wordcloud-region.guangzhou {
+            border-top: 5px solid var(--guangzhou-color);
+        }
+        
+        .wordcloud-region.zengcheng {
+            border-top: 5px solid var(--zengcheng-color);
+        }
+        
+        .wordcloud-title {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0; /* 防止标题区域压缩 */
+        }
+        
+        .wordcloud-area {
+            flex: 1; /* 占据剩余空间 */
+            width: 100%;
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 15px;
+            position: relative;
+            min-height: 350px; /* 确保最小高度 */
+        }
+        
+        /* 主题分析表格 */
+        .theme-comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        }
+        
+        .theme-comparison-table th {
+            background: linear-gradient(135deg, var(--guangzhou-color), var(--zengcheng-color));
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .theme-comparison-table td {
+            padding: 18px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+            text-align: center;
+        }
+        
+        .theme-comparison-table tr:nth-child(even) {
+            background: #f8fafc;
+        }
+        
+        .theme-comparison-table tr:hover {
+            background: #edf2f7;
+        }
+        
+        .theme-strength {
+            display: inline-block;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            min-width: 80px;
+        }
+        
+        .theme-strength.high {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .theme-strength.medium {
+            background: #feebc8;
+            color: #744210;
+        }
+        
+        .theme-strength.low {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        
+        /* 关键洞察 */
+        .insights-comparison {
+            background: white;
+            border-radius: 18px;
+            padding: 35px;
+            margin-top: 40px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .insights-header {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #edf2f7;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        .insight-card {
+            background: #f8fafc;
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid;
+            transition: transform 0.3s;
+        }
+        
+        .insight-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .insight-card.similarity {
+            border-left-color: var(--comparison-color);
+        }
+        
+        .insight-card.difference {
+            border-left-color: var(--neutral-color);
+        }
+        
+        .insight-title {
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .insight-title.similarity {
+            color: var(--comparison-color);
+        }
+        
+        .insight-title.difference {
+            color: var(--neutral-color);
+        }
+        
+        .insight-content {
+            color: #4a5568;
+            line-height: 1.7;
+        }
+        
+        /* 网络图容器 */
+        .network-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        .network-region {
+            height: 450px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            background: white;
+        }
+        
+        .network-region.guangzhou {
+            border-top: 5px solid var(--guangzhou-color);
+        }
+        
+        .network-region.zengcheng {
+            border-top: 5px solid var(--zengcheng-color);
+        }
+        
+        /* 页脚 */
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid #e2e8f0;
+            color: #718096;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .wordcloud-comparison, .network-comparison, .dual-chart-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .dual-chart-container {
+                height: auto;
+            }
+            
+            .wordcloud-region {
+                height: 500px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .stat-comparison-card {
+                min-width: 170px;
+                padding: 20px;
+            }
+            
+            .stat-comparison-value {
+                font-size: 2.2rem;
+            }
+            
+            .comparison-tab-btn {
+                padding: 10px 20px;
+                min-width: 150px;
+                font-size: 1rem;
+            }
+            
+            .comparison-chart-container {
+                height: 350px;
+            }
+            
+            .wordcloud-region {
+                height: 450px;
+            }
+            
+            .wordcloud-area {
+                min-height: 300px;
+            }
+            
+            .network-region {
+                height: 350px;
+            }
+        }
+        
+        /* 高亮文本 */
+        .highlight {
+            background: linear-gradient(120deg, rgba(26, 91, 158, 0.1) 0%, rgba(44, 122, 94, 0.1) 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px 0;
+            border-left: 4px solid var(--comparison-color);
+        }
+        
+        .highlight-title {
+            color: var(--comparison-color);
+            font-weight: 700;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 标题区域 -->
+        <header class="comparison-header">
+            <h1>广州市 vs. 增城区教学成果多维度对比分析</h1>
+            <p class="subtitle">基于广州市333项教学成果与增城区19项教学成果的主题分析、词频分析、情感分析和网络分析对比</p>
+            
+            <div class="stats-comparison">
+                <div class="stat-comparison-card guangzhou">
+                    <div class="stat-comparison-value">333</div>
+                    <div class="stat-comparison-label">广州市教学成果</div>
+                    <div class="stat-subtext">基础教育、中职教育、终身教育</div>
+                </div>
+                <div class="stat-comparison-card zengcheng">
+                    <div class="stat-comparison-value">19</div>
+                    <div class="stat-comparison-label">增城区教学成果</div>
+                    <div class="stat-subtext">5项重点项目 + 14项一般项目</div>
+                </div>
+                <div class="stat-comparison-card comparison">
+                    <div class="stat-comparison-value">17.5:1</div>
+                    <div class="stat-comparison-label">成果数量比</div>
+                    <div class="stat-subtext">广州市 vs 增城区</div>
+                </div>
+                <div class="stat-comparison-card">
+                    <div class="stat-comparison-value">12 vs 4</div>
+                    <div class="stat-comparison-label">LDA主题数</div>
+                    <div class="stat-subtext">广州市 vs 增城区</div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- 导航标签 -->
+        <div class="comparison-tabs">
+            <button class="comparison-tab-btn active" onclick="showComparisonTab('theme-analysis')">🎯 主题对比分析</button>
+            <button class="comparison-tab-btn" onclick="showComparisonTab('keyword-analysis')">🔤 关键词对比分析</button>
+            <button class="comparison-tab-btn" onclick="showComparisonTab('sentiment-analysis')">📈 情感对比分析</button>
+            <button class="comparison-tab-btn" onclick="showComparisonTab('network-analysis')">🕸️ 网络关系对比</button>
+        </div>
+        
+        <!-- 主题对比分析 -->
+        <div id="theme-analysis" class="comparison-content active">
+            <div class="comparison-section">
+                <div class="section-header">
+                    <div class="section-title">🎯 LDA主题模型对比分析</div>
+                </div>
+                
+                <!-- 主题分布对比 -->
+                <div class="comparison-card">
+                    <div class="comparison-card-header">
+                        <div class="card-title">📊 主题分布对比</div>
+                    </div>
+                    <div class="dual-chart-container">
+                        <div class="dual-chart">
+                            <canvas id="themeDistributionGuangzhou"></canvas>
+                        </div>
+                        <div class="dual-chart">
+                            <canvas id="themeDistributionZengcheng"></canvas>
+                        </div>
+                    </div>
+                    <div class="highlight" style="margin-top: 25px;">
+                        <div class="highlight-title">主题分布对比发现</div>
+                        <p><strong>广州市主题更多元（12个主题）</strong>：涵盖协同育人、数字赋能、文化传承、教学改革、产教融合、教师发展、科学教育、特殊教育等广泛领域，体现全域教育改革的全面性。</p>
+                        <p><strong>增城区主题更聚焦（4个主题）</strong>：集中在教学范式创新（36.8%）、数字教育转型（26.3%）、素养导向改革（21.1%）、评价教研协同（15.8%），体现区域教育改革的重点突破。</p>
+                    </div>
+                </div>
+                
+                <!-- 主题强度对比表格 -->
+                <div class="comparison-card">
+                    <div class="comparison-card-header">
+                        <div class="card-title">📋 主题强度对比表</div>
+                    </div>
+                    <table class="theme-comparison-table">
+                        <thead>
+                            <tr>
+                                <th>主题类型</th>
+                                <th>广州市主题强度</th>
+                                <th>增城区主题强度</th>
+                                <th>对比分析</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>协同育人</strong></td>
+                                <td><span class="theme-strength high">高 (28%)</span></td>
+                                <td><span class="theme-strength medium">中 (15.8%)</span></td>
+                                <td>广州市更强调校家社政企多元协同，增城区侧重区域内部协同</td>
+                            </tr>
+                            <tr>
+                                <td><strong>数字赋能</strong></td>
+                                <td><span class="theme-strength high">高 (26%)</span></td>
+                                <td><span class="theme-strength high">高 (26.3%)</span></td>
+                                <td>两者均高度重视，广州市侧重AI、VR等技术应用，增城区侧重数字转型生态构建</td>
+                            </tr>
+                            <tr>
+                                <td><strong>文化传承</strong></td>
+                                <td><span class="theme-strength high">高 (16%)</span></td>
+                                <td><span class="theme-strength low">低 (0%)</span></td>
+                                <td>广州市突出岭南文化、非遗传承等地域特色，增城区未体现文化主题</td>
+                            </tr>
+                            <tr>
+                                <td><strong>教学改革</strong></td>
+                                <td><span class="theme-strength medium">中 (12%)</span></td>
+                                <td><span class="theme-strength high">高 (36.8%)</span></td>
+                                <td>增城区最突出主题，强调教学范式创新；广州市教学改革融合在其他主题中</td>
+                            </tr>
+                            <tr>
+                                <td><strong>评价改革</strong></td>
+                                <td><span class="theme-strength low">低 (融合)</span></td>
+                                <td><span class="theme-strength medium">中 (15.8%)</span></td>
+                                <td>增城区将评价改革作为独立主题，重点项目100%涉及评价改革</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 主题聚类对比 -->
+                <div class="comparison-card">
+                    <div class="comparison-card-header">
+                        <div class="card-title">🔍 主题聚类空间分布对比</div>
+                    </div>
+                    <div class="comparison-chart-container">
+                        <div id="themeClusterComparison"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 关键词对比分析 -->
+        <div id="keyword-analysis" class="comparison-content">
+            <div class="comparison-section">
+                <div class="section-header">
+                    <div class="section-title">🔤 关键词对比分析</div>
+                </div>
+                
+                <!-- 词云对比 -->
+                <div class="comparison-card">
+                    <div class="comparison-card-header">
+                        <div class="card-title">☁️ 关键词云对比</div>
+                    </div>
+                    <div class="wordcloud-comparison">
+                        <div class="wordcloud-region guangzhou">
+                            <div class="wordcloud-title">
+                                <span>广州市关键词云</span>
+                                <span class="region-tag guangzhou">333项</span>
+                            </div>
+                            <div id="wordcloud-guangzhou" class="wordcloud-area"></div>
+                            <div style="margin-top: 15px; font-size: 0.95rem; color: #4a5568; flex-shrink: 0;">
+                                <p><strong>核心词：</strong>育人、教学、课程、模式、实践、探索、创新、素养、能力、协同、文化、美育</p>
+                            </div>
+                        </div>
+                        <div class="wordcloud-region zengcheng">
+                            <div class="wordcloud-title">
+                                <span>增城区关键词云</span>
+                                <span class="region-tag zengcheng">19项</span>
+                            </div>
+                            <div id="wordcloud-zengcheng" class="wordcloud-area"></div>
+                            <div style="margin-top: 15px; font-size: 0.95rem; color: #4a5568; flex-shrink: 0;">
+                                <p><strong>核心词：</strong>教学、实践、导向、模式、构建、课堂、学习、数字、素养、评价、区域、协同</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="highlight" style="margin-top: 25px;">
+                        <div class="highlight-title">关键词对比发现</div>
+                        <p><strong>共同关注：</strong>两地均高度重视"教学"、"实践"、"模式"、"素养"等核心教育词汇，体现教育改革的基本共识。</p>
+                        <p><strong>广州特色：</strong>广州市更突出"育人"（中心词）、"文化"、"美育"、"探索"等词汇，体现全人教育和文化传承导向。</p>
+                        <p><strong>增城特色：</strong>增城区更强调"导向"、"构建"、"评价"、"区域"等词汇，体现系统性构建和区域特色发展。</p>
+                    </div>
+                </div>
+                
+                <!-- 高频词对比 -->
+                <div class="comparison-card">
+                    <div class="comparison-card-header">
+                        <div class="card-title">📊 高频词Top10对比</div>
+                    </div>
+                    <div class="comparison-chart-container">
+                        <canvas id="keywordComparisonChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 特色词汇分析 -->
+                <div class="comparison-card">
+                    <div class="comparison-card-header">
+                        <div class="card-title">🎯 特色词汇对比分析</div>
+                    </div>
+                    <div class="dual-chart-container">
+                        <div class="dual-chart">
+                            <div style="padding: 15px;">
+                                <h4 style="color: var(--guangzhou-color); margin-bottom: 15px; font-size: 1.2rem;">广州市特色词汇</h4>
+                                <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                                    <span style="background: rgba(26, 91, 158, 0.15); color: var(--guangzhou-color); padding: 8px 15px; border-radius: 20px; font-weight: 500;">育人</span>
+                                    <span style="background: rgba(26, 91, 158, 0.15); color: var(--guangzhou-color); padding: 8px 15px; border-radius: 20px; font-weight: 500;">文化</span>
+                                    <span style="background: rgba(26, 91, 158, 0.15); color: var(--guangzhou-color); padding: 8px 15px; border-radius: 20px; font-weight: 500;">美育</span>
+                                    <span style="background: rgba(26, 91, 158, 0.15); color: var(--guangzhou-color); padding: 8px 15px; border-radius: 20px; font-weight: 500;">探索</span>
+                                    <span style="background: rgba(26, 91, 158, 0.15); color: var(--guangzhou-color); padding: 8px 15px; border-radius: 20px; font-weight: 500;">产教融合</span>
+                                    <span style="background: rgba(26, 91, 158, 0.15); color: var(--guangzhou-color); padding: 8px 15px; border-radius: 20px; font-weight: 500;">粤剧</span>
+                                    <span style="background: rgba(26, 91, 158, 0.15); color: var(--guangzhou-color); padding: 8px 15px; border-radius: 20px; font-weight: 500;">非遗</span>
+                                    <span style="background: rgba(26, 91, 158, 0.15); color: var(--guangzhou-color); padding: 8px 15px; border-radius: 20px; font-weight: 500;">科学教育</span>
+                                    <span style="background: rgba(26, 91, 158, 0.15); color: var(--guangzhou-color); padding: 8px 15px; border-radius: 20px; font-weight: 500;">特殊教育</span>
+                                </div>
+                                <div style="margin-top: 20px; color: #4a5568; line-height: 1.6;">
+                                    <p><strong>特征解读：</strong>广州市作为国家中心城市，教育改革体现"全人教育+文化传承+多元发展"的鲜明特色，涵盖面广，领域多元。</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dual-chart">
+                            <div style="padding: 15px;">
+                                <h4 style="color: var(--zengcheng-color); margin-bottom: 15px; font-size: 1.2rem;">增城区特色词汇</h4>
+                                <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                                    <span style="background: rgba(44, 122, 94, 0.15); color: var(--zengcheng-color); padding: 8px 15px; border-radius: 20px; font-weight: 500;">评价</span>
+                                    <span style="background: rgba(44, 122, 94, 0.15); color: var(--zengcheng-color); padding: 8px 15px; border-radius: 20px; font-weight: 500;">教研</span>
+                                    <span style="background: rgba(44, 122, 94, 0.15); color: var(--zengcheng-color); padding: 8px 15px; border-radius: 20px; font-weight: 500;">区域</span>
+                                    <span style="background: rgba(44, 122, 94, 0.15); color: var(--zengcheng-color); padding: 8px 15px; border-radius: 20px; font-weight: 500;">构建</span>
+                                    <span style="background: rgba(44, 122, 94, 0.15); color: var(--zengcheng-color); padding: 8px 15px; border-radius: 20px; font-weight: 500;">驱动</span>
+                                    <span style="background: rgba(44, 122, 94, 0.15); color: var(--zengcheng-color); padding: 8px 15px; border-radius: 20px; font-weight: 500;">生态</span>
+                                    <span style="background: rgba(44, 122, 94, 0.15); color: var(--zengcheng-color); padding: 8px 15px; border-radius: 20px; font-weight: 500;">党建</span>
+                                    <span style="background: rgba(44, 122, 94, 0.15); color: var(--zengcheng-color); padding: 8px 15px; border-radius: 20px; font-weight: 500;">转型</span>
+                                </div>
+                                <div style="margin-top: 20px; color: #4a5568; line-height: 1.6;">
+                                    <p><strong>特征解读：</strong>增城区作为广州郊区，教育改革体现"区域协同+数字转型+评价改革"的务实特色，聚焦重点，系统推进。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 情感对比分析 -->
+        <div id="sentiment-analysis" class="comparison-content">
+            <div class="comparison-section">
+                <div class="section-header">
+                    <div class="section-title">📈 情感对比分析</div>
+                </div>
+                
+                <!-- 情感分布对比 -->
+                <div class="comparison-card">
+                    <div class="comparison-card-header">
+                        <div class="card-title">😊 情感分布对比</div>
+                    </div>
+                    <div class="dual-chart-container">
+                        <div class="dual-chart">
+                            <div style="text-align: center; margin-bottom: 15px; color: var(--guangzhou-color); font-weight: 700; font-size: 1.2rem;">广州市情感分布</div>
+                            <canvas id="sentimentGuangzhou"></canvas>
+                            <div style="text-align: center; margin-top: 15px;">
+                                <span style="display: inline-block; padding: 8px 20px; background: #c6f6d5; color: #22543d; border-radius: 20px; font-weight: 600;">情感得分: +0.82</span>
+                            </div>
+                        </div>
+                        <div class="dual-chart">
+                            <div style="text-align: center; margin-bottom: 15px; color: var(--zengcheng-color); font-weight: 700; font-size: 1.2rem;">增城区情感分布</div>
+                            <canvas id="sentimentZengcheng"></canvas>
+                            <div style="text-align: center; margin-top: 15px;">
+                                <span style="display: inline-block; padding: 8px 20px; background: #c6f6d5; color: #22543d; border-radius: 20px; font-weight: 600;">情感得分: +0.81</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="highlight" style="margin-top: 25px;">
+                        <div class="highlight-title">情感分析发现</div>
+                        <p><strong>高度相似的情感倾向：</strong>两地教学成果均呈现高度积极的情感倾向（广州市68%积极，增城区68%积极），体现了广州地区教育改革的积极进取精神。</p>
+                        <p><strong>细微的情感差异：</strong>广州市消极情感占比7%，增城区5%，增城区成果的情感表达略更积极。这可能与增城区作为郊区，教育改革成果更注重实效性和推广性有关。</p>
+                        <p><strong>情感表达特征：</strong>广州市使用更多"探索"、"创新"、"融合"等前瞻性词汇；增城区使用更多"构建"、"驱动"、"转型"等行动性词汇。</p>
+                    </div>
+                </div>
+                
+                <!-- 情感强度对比 -->
+                <div class="comparison-card">
+                    <div class="comparison-card-header">
+                        <div class="card-title">📊 情感强度多维对比</div>
+                    </div>
+                    <div class="comparison-chart-container">
+                        <canvas id="sentimentRadarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 网络关系对比 -->
+        <div id="network-analysis" class="comparison-content">
+            <div class="comparison-section">
+                <div class="section-header">
+                    <div class="section-title">🕸️ 社会网络关系对比</div>
+                </div>
+                
+                <!-- 网络图对比 -->
+                <div class="comparison-card">
+                    <div class="comparison-card-header">
+                        <div class="card-title">🔗 关键词网络结构对比</div>
+                    </div>
+                    <div class="network-comparison">
+                        <div class="network-region guangzhou">
+                            <div style="padding: 15px; text-align: center; color: var(--guangzhou-color); font-weight: 700; font-size: 1.1rem; border-bottom: 1px solid #e2e8f0;">广州市关键词网络</div>
+                            <div id="network-guangzhou" style="height: calc(100% - 50px);"></div>
+                        </div>
+                        <div class="network-region zengcheng">
+                            <div style="padding: 15px; text-align: center; color: var(--zengcheng-color); font-weight: 700; font-size: 1.1rem; border-bottom: 1px solid #e2e8f0;">增城区关键词网络</div>
+                            <div id="network-zengcheng" style="height: calc(100% - 50px);"></div>
+                        </div>
+                    </div>
+                    <div class="highlight" style="margin-top: 25px;">
+                        <div class="highlight-title">网络结构对比发现</div>
+                        <p><strong>网络中心对比：</strong>广州市网络以"育人"为核心（中心度0.95），增城区以"教学"为核心（中心度0.92）。这体现了两地教育改革的根本导向差异：广州市强调"育人"的根本目的，增城区强调"教学"的核心过程。</p>
+                        <p><strong>网络密度对比：</strong>广州市网络密度0.71，增城区网络密度0.76。增城区关键词之间关联更紧密，可能因为成果主题更聚焦，形成了更紧密的概念网络。</p>
+                        <p><strong>网络结构对比：</strong>广州市网络呈现"育人-教学-文化-数字"的多中心结构；增城区网络呈现"教学-实践-模式-构建"的递进式结构。</p>
+                    </div>
+                </div>
+                
+                <!-- 网络指标对比 -->
+                <div class="comparison-card">
+                    <div class="comparison-card-header">
+                        <div class="card-title">📊 网络指标量化对比</div>
+                    </div>
+                    <div class="comparison-chart-container">
+                        <canvas id="networkMetricsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 综合洞察 -->
+        <div class="insights-comparison">
+            <div class="insights-header">💡 综合对比洞察</div>
+            
+            <div class="insights-grid">
+                <div class="insight-card similarity">
+                    <div class="insight-title similarity">🤝 共同特征（相似性）</div>
+                    <div class="insight-content">
+                        <p><strong>1. 高度积极的情感倾向：</strong>两地教学成果均呈现高度积极的情感表达（68%积极词汇），体现广州地区教育改革积极进取的共同精神。</p>
+                        <p><strong>2. 数字赋能成为共识：</strong>两地均高度重视教育数字化转型（广州市26%，增城区26.3%），将数字技术作为教育改革的核心驱动力。</p>
+                        <p><strong>3. 素养导向教学改革：</strong>两地均强调核心素养培育，推动从知识传授向素养培养的转变。</p>
+                        <p><strong>4. 协同创新教育生态：</strong>两地均重视多元主体协同，构建开放的教育生态。</p>
+                    </div>
+                </div>
+                
+                <div class="insight-card difference">
+                    <div class="insight-title difference">🔀 差异特征（独特性）</div>
+                    <div class="insight-content">
+                        <p><strong>1. 主题广度 vs 主题深度：</strong>广州市主题更广泛多元（12个主题），体现全域改革的全面性；增城区主题更聚焦深入（4个主题），体现区域改革的重点突破。</p>
+                        <p><strong>2. 文化传承 vs 评价改革：</strong>广州市突出岭南文化传承和美育特色（16%）；增城区突出评价改革和教研创新（15.8%）。</p>
+                        <p><strong>3. 育人导向 vs 教学导向：</strong>广州市以"育人"为网络核心，强调教育的根本目的；增城区以"教学"为网络核心，强调教育的过程方法。</p>
+                        <p><strong>4. 全域覆盖 vs 区域特色：</strong>广州市成果涵盖基础教育、中职教育、终身教育等全域；增城区成果体现"区域协同·数字驱动"的郊区特色。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 对比结论 -->
+            <div class="highlight" style="margin-top: 30px;">
+                <div class="highlight-title">🎯 对比分析结论</div>
+                <p><strong>广州市作为国家中心城市</strong>，其教学成果体现了"全人教育+文化传承+多元发展"的鲜明特色，主题广泛，覆盖全面，形成了"育人导向、数字赋能、文化浸润"三位一体的教育改革格局。</p>
+                <p><strong>增城区作为广州郊区</strong>，其教学成果体现了"区域协同+数字转型+评价改革"的务实特色，主题聚焦，重点突破，形成了"教学创新、评价引领、数字驱动"的区域教育改革模式。</p>
+                <p><strong>两地形成了互补协同关系：</strong>广州市为增城区提供方向和框架（如育人导向、文化传承），增城区为广州市提供实践验证和模式探索（如评价改革、区域协同）。这种"全域引领+区域突破"的模式，构成了广州教育改革的完整生态。</p>
+            </div>
+        </div>
+        
+        <footer>
+            <p>数据来源：广州市333项教学成果立项项目 + 增城区19项教学成果立项项目（5项重点项目 + 14项一般项目）</p>
+            <p>分析方法：LDA主题模型对比、词频对比分析、情感对比分析、社会网络对比分析、聚类分析</p>
+            <p>分析时间：2024年 | 可视化技术：WordCloud2.js + Chart.js + ECharts + D3.js</p>
+            <p style="margin-top: 15px; color: var(--comparison-color); font-weight: 600;">© 2024 广州市 vs. 增城区教学成果多维度对比分析系统</p>
+        </footer>
+    </div>
+
+    <script>
+        // 广州市数据
+        const guangzhouKeywords = [
+            ["育人", 100], ["教学", 95], ["课程", 90], ["模式", 88],
+            ["实践", 85], ["探索", 82], ["创新", 80], ["素养", 78],
+            ["能力", 75], ["协同", 73], ["文化", 72], ["美育", 70],
+            ["数字", 68], ["赋能", 66], ["融合", 65], ["体系", 64],
+            ["项目式", 62], ["深度", 60], ["学习", 58], ["课堂", 56]
+        ];
+        
+        const guangzhouThemes = [
+            {name: '协同育人模式', value: 28, keywords: ['校家社','一体化','五育融合','贯通培养','多元协同']},
+            {name: '数字教学赋能', value: 26, keywords: ['AI','虚拟现实','智慧课堂','数据驱动','自适应']},
+            {name: '文化美育传承', value: 16, keywords: ['岭南','非遗','美育','红色基因','乡土文化']},
+            {name: '教学范式改革', value: 12, keywords: ['课堂','学习','深度','项目式','探究']},
+            {name: '产教融合创新', value: 9, keywords: ['校企合作','岗课赛证','工匠精神','职业能力','实训基地']},
+            {name: '教师专业发展', value: 6, keywords: ['共同体','教研范式','成长路径','评价改革','研修模式']},
+            {name: '科学教育探索', value: 3, keywords: ['STEM','工程思维','探究能力','创新素养','跨学科']}
+        ];
+        
+        // 增城区数据
+        const zengchengKeywords = [
+            ["教学", 95], ["实践", 92], ["导向", 88], ["模式", 85],
+            ["构建", 82], ["课堂", 80], ["学习", 78], ["数字", 75],
+            ["素养", 72], ["评价", 70], ["区域", 68], ["协同", 65],
+            ["创新", 63], ["发展", 60], ["技术", 58], ["改革", 55],
+            ["深度", 53], ["智能", 50], ["教研", 48], ["能力", 45]
+        ];
+        
+        const zengchengThemes = [
+            {name: '教学范式创新', value: 36.8, keywords: ['教学','课堂','模式','构建','实践','改革']},
+            {name: '数字教育转型', value: 26.3, keywords: ['数字','智能','技术','赋能','转型','生态']},
+            {name: '素养导向改革', value: 21.1, keywords: ['素养','导向','深度学习','能力','综合']},
+            {name: '评价教研协同', value: 15.8, keywords: ['评价','教研','区域','协同','共同体','机制']}
+        ];
+        
+        // 词云配置
+        const wordCloudConfig = {
+            gridSize: 16,
+            weightFactor: 8,
+            fontFamily: 'Microsoft YaHei, PingFang SC, sans-serif',
+            backgroundColor: '#ffffff',
+            rotateRatio: 0.5,
+            shape: 'circle',
+            ellipticity: 0.9,
+            minSize: 12,
+            color: function(word, weight) {
+                // 通用颜色函数
+                const colorMap = {
+                    // 广州市特定颜色
+                    'guangzhou': {
+                        '育人': '#1a5b9e', '协同': '#1a5b9e', '融合': '#1a5b9e', '体系': '#1a5b9e',
+                        '教学': '#4ca1af', '课程': '#4ca1af', '课堂': '#4ca1af', '学习': '#4ca1af',
+                        '文化': '#f39c12', '美育': '#f39c12', '岭南': '#f39c12', '非遗': '#f39c12',
+                        '数字': '#e74c3c', '赋能': '#e74c3c', 'AI': '#e74c3c', '智能': '#e74c3c'
+                    },
+                    // 增城区特定颜色
+                    'zengcheng': {
+                        '教学': '#2c7a5e', '课堂': '#2c7a5e', '学习': '#2c7a5e', '模式': '#2c7a5e',
+                        '数字': '#38a169', '智能': '#38a169', '技术': '#38a169', '转型': '#38a169',
+                        '素养': '#e6b93f', '导向': '#e6b93f', '深度': '#e6b93f', '能力': '#e6b93f',
+                        '区域': '#2c5282', '协同': '#2c5282', '评价': '#2c5282', '教研': '#2c5282'
+                    }
+                };
+                
+                // 根据区域返回颜色
+                if (this.region === 'guangzhou' && colorMap.guangzhou[word]) {
+                    return colorMap.guangzhou[word];
+                } else if (this.region === 'zengcheng' && colorMap.zengcheng[word]) {
+                    return colorMap.zengcheng[word];
+                }
+                
+                // 默认颜色
+                return this.region === 'guangzhou' ? '#34495e' : '#718096';
+            }
+        };
+        
+        // 初始化词云
+        function initWordClouds() {
+            console.log("初始化词云...");
+            
+            // 广州市词云
+            const guangzhouElement = document.getElementById('wordcloud-guangzhou');
+            if (guangzhouElement) {
+                guangzhouElement.innerHTML = ''; // 清空容器
+                const canvas = document.createElement('canvas');
+                canvas.width = guangzhouElement.offsetWidth;
+                canvas.height = guangzhouElement.offsetHeight;
+                guangzhouElement.appendChild(canvas);
+                
+                WordCloud(canvas, {
+                    ...wordCloudConfig,
+                    region: 'guangzhou',
+                    list: guangzhouKeywords,
+                    clearCanvas: true
+                });
+                console.log("广州市词云初始化完成");
+            }
+            
+            // 增城区词云
+            const zengchengElement = document.getElementById('wordcloud-zengcheng');
+            if (zengchengElement) {
+                zengchengElement.innerHTML = ''; // 清空容器
+                const canvas = document.createElement('canvas');
+                canvas.width = zengchengElement.offsetWidth;
+                canvas.height = zengchengElement.offsetHeight;
+                zengchengElement.appendChild(canvas);
+                
+                WordCloud(canvas, {
+                    ...wordCloudConfig,
+                    region: 'zengcheng',
+                    list: zengchengKeywords,
+                    clearCanvas: true
+                });
+                console.log("增城区词云初始化完成");
+            }
+        }
+        
+        // 主题分布对比图表
+        function initThemeDistributionCharts() {
+            // 广州市主题分布
+            const ctx1 = document.getElementById('themeDistributionGuangzhou').getContext('2d');
+            new Chart(ctx1, {
+                type: 'pie',
+                data: {
+                    labels: guangzhouThemes.map(t => t.name),
+                    datasets: [{
+                        data: guangzhouThemes.map(t => t.value),
+                        backgroundColor: [
+                            '#1a5b9e', '#4ca1af', '#f39c12', '#2ecc71',
+                            '#9b59b6', '#e74c3c', '#3498db'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: '广州市LDA主题分布（12个主题）',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            },
+                            color: '#1a5b9e'
+                        }
+                    }
+                }
+            });
+            
+            // 增城区主题分布
+            const ctx2 = document.getElementById('themeDistributionZengcheng').getContext('2d');
+            new Chart(ctx2, {
+                type: 'pie',
+                data: {
+                    labels: zengchengThemes.map(t => t.name),
+                    datasets: [{
+                        data: zengchengThemes.map(t => t.value),
+                        backgroundColor: ['#2c7a5e', '#38a169', '#e6b93f', '#2c5282'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: '增城区LDA主题分布（4个主题）',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            },
+                            color: '#2c7a5e'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 主题聚类对比
+        function initThemeClusterComparison() {
+            const chartDom = document.getElementById('themeClusterComparison');
+            const myChart = echarts.init(chartDom);
+            
+            const data = [
+                // 广州市主题聚类
+                {name: '协同育人', value: [85, 20], region: '广州市', size: 28, keywords: '校家社、一体化、五育融合'},
+                {name: '数字赋能', value: [75, 35], region: '广州市', size: 26, keywords: 'AI、虚拟现实、智慧课堂'},
+                {name: '文化传承', value: [60, 80], region: '广州市', size: 16, keywords: '岭南、非遗、美育'},
+                {name: '教学改革', value: [40, 70], region: '广州市', size: 12, keywords: '课堂、学习、深度'},
+                {name: '产教融合', value: [30, 40], region: '广州市', size: 9, keywords: '校企合作、岗课赛证'},
+                {name: '教师发展', value: [20, 60], region: '广州市', size: 6, keywords: '共同体、教研范式'},
+                
+                // 增城区主题聚类
+                {name: '教学范式创新', value: [45, 85], region: '增城区', size: 36.8, keywords: '教学、课堂、模式、构建'},
+                {name: '数字教育转型', value: [70, 45], region: '增城区', size: 26.3, keywords: '数字、智能、技术、赋能'},
+                {name: '素养导向改革', value: [55, 65], region: '增城区', size: 21.1, keywords: '素养、导向、深度学习'},
+                {name: '评价教研协同', value: [80, 30], region: '增城区', size: 15.8, keywords: '评价、教研、区域、协同'}
+            ];
+            
+            const option = {
+                tooltip: {
+                    formatter: function(params) {
+                        return `<strong>${params.data.name}</strong><br/>
+                                区域: ${params.data.region}<br/>
+                                强度: ${params.data.size}%<br/>
+                                关键词: ${params.data.keywords}`;
+                    }
+                },
+                xAxis: {
+                    name: '系统性维度',
+                    min: 0,
+                    max: 100,
+                    nameLocation: 'middle',
+                    nameGap: 30
+                },
+                yAxis: {
+                    name: '实践性维度',
+                    min: 0,
+                    max: 100,
+                    nameLocation: 'middle',
+                    nameGap: 40
+                },
+                series: [{
+                    type: 'scatter',
+                    data: data,
+                    symbolSize: function(data) {
+                        return data.size * 1.5;
+                    },
+                    itemStyle: {
+                        color: function(params) {
+                            return params.data.region === '广州市' ? '#1a5b9e' : '#2c7a5e';
+                        },
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    },
+                    label: {
+                        show: true,
+                        formatter: '{b}',
+                        position: 'top',
+                        fontSize: 12,
+                        fontWeight: 'bold'
+                    },
+                    emphasis: {
+                        scale: true,
+                        scaleSize: 10
+                    }
+                }],
+                legend: {
+                    data: [
+                        {name: '广州市主题', itemStyle: {color: '#1a5b9e'}},
+                        {name: '增城区主题', itemStyle: {color: '#2c7a5e'}}
+                    ]
+                }
+            };
+            
+            myChart.setOption(option);
+        }
+        
+        // 关键词对比图表
+        function initKeywordComparisonChart() {
+            const ctx = document.getElementById('keywordComparisonChart').getContext('2d');
+            
+            // 提取两地Top10关键词
+            const guangzhouTop10 = guangzhouKeywords.slice(0, 10).map(k => k[0]);
+            const zengchengTop10 = zengchengKeywords.slice(0, 10).map(k => k[0]);
+            
+            // 找出共同的关键词
+            const commonKeywords = guangzhouTop10.filter(k => zengchengTop10.includes(k));
+            
+            // 准备数据
+            const labels = [...new Set([...guangzhouTop10, ...zengchengTop10])];
+            const guangzhouData = labels.map(label => {
+                const item = guangzhouKeywords.find(k => k[0] === label);
+                return item ? item[1] : 0;
+            });
+            const zengchengData = labels.map(label => {
+                const item = zengchengKeywords.find(k => k[0] === label);
+                return item ? item[1] : 0;
+            });
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '广州市词频',
+                            data: guangzhouData,
+                            backgroundColor: 'rgba(26, 91, 158, 0.7)',
+                            borderColor: '#1a5b9e',
+                            borderWidth: 2
+                        },
+                        {
+                            label: '增城区词频',
+                            data: zengchengData,
+                            backgroundColor: 'rgba(44, 122, 94, 0.7)',
+                            borderColor: '#2c7a5e',
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw} 词频`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '词频'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 情感分析图表
+        function initSentimentCharts() {
+            // 广州市情感分布
+            const ctx1 = document.getElementById('sentimentGuangzhou').getContext('2d');
+            new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: ['积极情感', '中性情感', '消极情感'],
+                    datasets: [{
+                        data: [68, 25, 7],
+                        backgroundColor: ['#4CAF50', '#FFC107', '#F44336'],
+                        borderWidth: 3,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+            
+            // 增城区情感分布
+            const ctx2 = document.getElementById('sentimentZengcheng').getContext('2d');
+            new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['积极情感', '中性情感', '消极情感'],
+                    datasets: [{
+                        data: [68, 27, 5],
+                        backgroundColor: ['#2c7a5e', '#e6b93f', '#e53e3e'],
+                        borderWidth: 3,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+            
+            // 情感雷达图对比
+            const ctx3 = document.getElementById('sentimentRadarChart').getContext('2d');
+            new Chart(ctx3, {
+                type: 'radar',
+                data: {
+                    labels: ['创新性', '系统性', '实践性', '前瞻性', '影响力', '可推广性'],
+                    datasets: [
+                        {
+                            label: '广州市',
+                            data: [92, 85, 78, 90, 88, 82],
+                            backgroundColor: 'rgba(26, 91, 158, 0.2)',
+                            borderColor: '#1a5b9e',
+                            pointBackgroundColor: '#1a5b9e',
+                            borderWidth: 3,
+                            pointRadius: 5
+                        },
+                        {
+                            label: '增城区',
+                            data: [85, 88, 92, 82, 80, 90],
+                            backgroundColor: 'rgba(44, 122, 94, 0.2)',
+                            borderColor: '#2c7a5e',
+                            pointBackgroundColor: '#2c7a5e',
+                            borderWidth: 3,
+                            pointRadius: 5
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                stepSize: 20
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 网络图
+        function initNetworkGraphs() {
+            initNetwork('network-guangzhou', guangzhouKeywords.slice(0, 15), '#1a5b9e');
+            initNetwork('network-zengcheng', zengchengKeywords.slice(0, 15), '#2c7a5e');
+            
+            // 网络指标对比图表
+            const ctx = document.getElementById('networkMetricsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['网络密度', '平均路径长度', '聚类系数', '中心节点度'],
+                    datasets: [
+                        {
+                            label: '广州市',
+                            data: [0.71, 1.8, 0.65, 0.95],
+                            backgroundColor: 'rgba(26, 91, 158, 0.7)',
+                            borderColor: '#1a5b9e',
+                            borderWidth: 2
+                        },
+                        {
+                            label: '增城区',
+                            data: [0.76, 1.5, 0.72, 0.92],
+                            backgroundColor: 'rgba(44, 122, 94, 0.7)',
+                            borderColor: '#2c7a5e',
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1.0
+                        }
+                    }
+                }
+            });
+        }
+        
+        function initNetwork(containerId, keywords, color) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            const width = container.offsetWidth;
+            const height = container.offsetHeight;
+            
+            // 清空容器
+            container.innerHTML = '';
+            
+            const svg = d3.select(`#${containerId}`)
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height);
+            
+            // 生成网络节点
+            const nodes = keywords.map((kw, i) => ({
+                id: kw[0],
+                size: kw[1] / 10 + 20,
+                group: i % 4
+            }));
+            
+            // 生成网络连接
+            const links = [];
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < Math.min(i + 5, nodes.length); j++) {
+                    const strength = Math.min(nodes[i].size, nodes[j].size) / 100;
+                    if (Math.random() > 0.4) {
+                        links.push({
+                            source: nodes[i].id,
+                            target: nodes[j].id,
+                            value: strength
+                        });
+                    }
+                }
+            }
+            
+            const simulation = d3.forceSimulation(nodes)
+                .force('link', d3.forceLink(links).id(d => d.id).distance(100))
+                .force('charge', d3.forceManyBody().strength(-300))
+                .force('center', d3.forceCenter(width / 2, height / 2))
+                .force('collision', d3.forceCollide().radius(d => d.size + 5));
+            
+            // 绘制连线
+            const link = svg.append('g')
+                .selectAll('line')
+                .data(links)
+                .enter()
+                .append('line')
+                .attr('stroke-width', d => d.value * 10)
+                .attr('stroke', '#cbd5e0')
+                .attr('stroke-opacity', 0.6);
+            
+            // 绘制节点
+            const node = svg.append('g')
+                .selectAll('circle')
+                .data(nodes)
+                .enter()
+                .append('circle')
+                .attr('r', d => d.size)
+                .attr('fill', color)
+                .attr('stroke', '#ffffff')
+                .attr('stroke-width', 3)
+                .call(drag(simulation));
+            
+            // 添加标签
+            const label = svg.append('g')
+                .selectAll('text')
+                .data(nodes)
+                .enter()
+                .append('text')
+                .text(d => d.id)
+                .attr('font-size', d => Math.max(12, d.size / 2))
+                .attr('dx', d => d.size + 5)
+                .attr('dy', 4)
+                .attr('fill', '#2d3748')
+                .attr('font-weight', '500');
+            
+            simulation.on('tick', () => {
+                link
+                    .attr('x1', d => d.source.x)
+                    .attr('y1', d => d.source.y)
+                    .attr('x2', d => d.target.x)
+                    .attr('y2', d => d.target.y);
+                
+                node
+                    .attr('cx', d => d.x)
+                    .attr('cy', d => d.y);
+                
+                label
+                    .attr('x', d => d.x)
+                    .attr('y', d => d.y);
+            });
+            
+            function drag(simulation) {
+                function dragstarted(event) {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    event.subject.fx = event.subject.x;
+                    event.subject.fy = event.subject.y;
+                }
+                
+                function dragged(event) {
+                    event.subject.fx = event.x;
+                    event.subject.fy = event.y;
+                }
+                
+                function dragended(event) {
+                    if (!event.active) simulation.alphaTarget(0);
+                    event.subject.fx = null;
+                    event.subject.fy = null;
+                }
+                
+                return d3.drag()
+                    .on('start', dragstarted)
+                    .on('drag', dragged)
+                    .on('end', dragended);
+            }
+        }
+        
+        // Tab切换功能
+        function showComparisonTab(tabId) {
+            // 隐藏所有内容
+            document.querySelectorAll('.comparison-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 移除所有按钮的active类
+            document.querySelectorAll('.comparison-tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 显示选中的内容
+            document.getElementById(tabId).classList.add('active');
+            
+            // 为选中的按钮添加active类
+            event.target.classList.add('active');
+            
+            // 如果是关键词分析标签，重新渲染词云
+            if (tabId === 'keyword-analysis') {
+                setTimeout(() => {
+                    console.log("切换到关键词分析，重新渲染词云...");
+                    initWordClouds();
+                }, 300); // 延迟确保DOM已渲染
+            }
+            
+            // 重新渲染需要动态调整的图表
+            if (tabId === 'network-analysis') {
+                setTimeout(() => {
+                    initNetworkGraphs();
+                }, 100);
+            }
+        }
+        
+        // 初始化所有图表
+        function initAllCharts() {
+            console.log("开始初始化所有图表...");
+            initWordClouds();
+            initThemeDistributionCharts();
+            initThemeClusterComparison();
+            initKeywordComparisonChart();
+            initSentimentCharts();
+            initNetworkGraphs();
+            console.log("所有图表初始化完成");
+        }
+        
+        // 页面加载完成后初始化
+        window.addEventListener('load', function() {
+            console.log("页面加载完成，开始初始化...");
+            initAllCharts();
+        });
+        
+        // 窗口大小变化时重绘
+        window.addEventListener('resize', function() {
+            console.log("窗口大小变化，重绘图...");
+            const charts = ['themeClusterComparison'];
+            charts.forEach(id => {
+                const chart = echarts.getInstanceByDom(document.getElementById(id));
+                if (chart) {
+                    chart.resize();
+                }
+            });
+            
+            // 重新渲染网络图
+            initNetworkGraphs();
+            
+            // 重新渲染词云
+            initWordClouds();
+        });
+    </script>
+</body>
+</html>

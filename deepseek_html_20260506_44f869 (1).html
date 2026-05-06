@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>区域教学成果智能分析与培育系统</title>
+    <style>
+        :root {
+            --primary: #1a56db;
+            --secondary: #1e429f;
+            --accent: #00c6ff;
+            --bg-dark: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.8);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --border: rgba(148, 163, 184, 0.2);
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', 'Helvetica Neue', sans-serif;
+            background: radial-gradient(ellipse at top, #1e293b, #0f172a);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* 头部 */
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
+        }
+        .header .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 800px;
+            margin: 0 auto 30px;
+        }
+        .badge-row {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .badge {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 8px 24px;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .badge .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+
+        /* 模块网格 */
+        .section {
+            margin-bottom: 60px;
+        }
+        .section-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            padding-left: 16px;
+            border-left: 4px solid var(--accent);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 35px rgba(0,0,0,0.4);
+            border-color: var(--accent);
+            background: rgba(30, 41, 59, 0.95);
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+        }
+        .card-icon {
+            font-size: 2.2rem;
+            margin-bottom: 16px;
+        }
+        .card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+        .card p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            flex: 1;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: auto;
+            border-top: 1px solid var(--border);
+            padding-top: 16px;
+        }
+        .card-meta .tag {
+            background: rgba(0, 198, 255, 0.15);
+            color: var(--accent);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        .card-meta .link-arrow {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2.2rem; }
+            .cards-grid { grid-template-columns: 1fr; }
+        }
+
+        /* 页脚 */
+        .footer {
+            text-align: center;
+            margin-top: 80px;
+            padding-top: 30px;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <h1>📊 区域教学成果智能分析与培育系统</h1>
+            <p class="subtitle">
+                基于生成式AI辅助开发的全流程数据分析工具集，覆盖<b>宏观监测、区域对比、深度诊断、策略推荐</b>四大环节，<br>
+                为教学成果培育提供数据驱动、可视化、可复现的智能决策支持。
+            </p>
+            <div class="badge-row">
+                <div class="badge"><span class="dot"></span> 333项全市成果</div>
+                <div class="badge"><span class="dot" style="background:#f59e0b;"></span> 增城区专项分析</div>
+                <div class="badge"><span class="dot" style="background:#10b981;"></span> AI辅助开发</div>
+                <div class="badge"><span class="dot" style="background:#a78bfa;"></span> 可复现代码</div>
+            </div>
+        </header>
+
+        <!-- 模块1：宏观总览 · 全市教学成果数据洞察 -->
+        <section class="section">
+            <h2 class="section-title">🌐 宏观总览 · 全市教学成果数据洞察</h2>
+            <div class="cards-grid">
+                <a href="广州市教学成果立项数据可视化大屏.html" target="_blank" class="card">
+                    <div class="card-icon">📈</div>
+                    <h3>全市立项数据可视化大屏</h3>
+                    <p>12区立项数量、立项率、重点项目分布等核心指标一屏总览，快速把握全局态势。</p>
+                    <div class="card-meta">
+                        <span class="tag">数据大屏</span>
+                        <span class="link-arrow">进入分析 →</span>
+                    </div>
+                </a>
+                <a href="广州市教学成果关键词云图.html" target="_blank" class="card">
+                    <div class="card-icon">☁️</div>
+                    <h3>全市关键词云图</h3>
+                    <p>基于333项成果名称的文本挖掘，动态展示全市教学改革热点词汇与主题趋势。</p>
+                    <div class="card-meta">
+                        <span class="tag">词云分析</span>
+                        <span class="link-arrow">进入分析 →</span>
+                    </div>
+                </a>
+                <a href="广州市教学成果多维度分析.html" target="_blank" class="card">
+                    <div class="card-icon">🧠</div>
+                    <h3>全市多维度分析系统</h3>
+                    <p>LDA主题模型、情感分析、社会网络分析等，深度揭示成果内涵与关联。</p>
+                    <div class="card-meta">
+                        <span class="tag">文本挖掘</span>
+                        <span class="link-arrow">进入分析 →</span>
+                    </div>
+                </a>
+                <a href="广州市教学成果重点项目vs一般项目对比分析.html" target="_blank" class="card">
+                    <div class="card-icon">⚖️</div>
+                    <h3>重点项目 vs 一般项目对比</h3>
+                    <p>对比147项重点项目与186项一般项目的特征差异，提炼优秀成果的共性基因。</p>
+                    <div class="card-meta">
+                        <span class="tag">对比分析</span>
+                        <span class="link-arrow">进入分析 →</span>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- 模块2：区域聚焦 · 增城区对标分析 -->
+        <section class="section">
+            <h2 class="section-title">🎯 区域聚焦 · 增城区对标分析</h2>
+            <div class="cards-grid">
+                <a href="增城区vs广州市重点项目对比分析.html" target="_blank" class="card">
+                    <div class="card-icon">🔍</div>
+                    <h3>增城区 vs 广州市重点项目对比</h3>
+                    <p>深入分析增城区19项成果与全市147项重点项目的差距，探寻关键提升点。</p>
+                    <div class="card-meta">
+                        <span class="tag">差距诊断</span>
+                        <span class="link-arrow">进入分析 →</span>
+                    </div>
+                </a>
+                <!-- ✅ 修复点：文件名补全正确的空格位置，确保与本地文件完全一致 -->
+                <a href="广州市 vs. 增城区教学成果多维度对比分析.html" target="_blank" class="card">
+                    <div class="card-icon">📊</div>
+                    <h3>广州市 vs 增城区多维度对比</h3>
+                    <p>主题、词频、情感、网络等多维对比，清晰呈现增城区的优势与短板。</p>
+                    <div class="card-meta">
+                        <span class="tag">多维对比</span>
+                        <span class="link-arrow">进入分析 →</span>
+                    </div>
+                </a>
+                <a href="广州市教学成果智能分析平台 - 增城区专项.html" target="_blank" class="card">
+                    <div class="card-icon">💎</div>
+                    <h3>增城区专项智能分析平台</h3>
+                    <p>增城区19项成果的详细列表、逐项画像与培育建议，即点即查。</p>
+                    <div class="card-meta">
+                        <span class="tag">智能画像</span>
+                        <span class="link-arrow">进入分析 →</span>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- 模块3：深度诊断 · 增城区成果精析 -->
+        <section class="section">
+            <h2 class="section-title">🔬 深度诊断 · 增城区成果精析</h2>
+            <div class="cards-grid">
+                <a href="增城区教学成果多维度分析系统.html" target="_blank" class="card">
+                    <div class="card-icon">🧬</div>
+                    <h3>增城区成果多维度分析系统</h3>
+                    <p>针对增城区19项成果的词云、LDA主题、情感、网络、聚类全维度解构。</p>
+                    <div class="card-meta">
+                        <span class="tag">深度诊断</span>
+                        <span class="link-arrow">进入分析 →</span>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- 模块4：培育赋能 · 路径规划与策略推荐 -->
+        <section class="section">
+            <h2 class="section-title">🚀 培育赋能 · 路径规划与策略推荐</h2>
+            <div class="cards-grid">
+                <a href="增城区教学成果培育路径模型系统（2026理论升级版）.html" target="_blank" class="card">
+                    <div class="card-icon">🧭</div>
+                    <h3>培育路径模型（2026理论升级版）</h3>
+                    <p>基于教育生态系统理论的“四阶八维”培育体系，配套三年行动计划与理论支撑。</p>
+                    <div class="card-meta">
+                        <span class="tag">理论框架</span>
+                        <span class="link-arrow">进入分析 →</span>
+                    </div>
+                </a>
+                <a href="增城区教学成果培育路径模型.html" target="_blank" class="card">
+                    <div class="card-icon">🗺️</div>
+                    <h3>培育路径模型（基础版）</h3>
+                    <p>问题导向的“四阶八维”培育路径设计，兼顾国家省市经验与增城特色。</p>
+                    <div class="card-meta">
+                        <span class="tag">路径规划</span>
+                        <span class="link-arrow">进入分析 →</span>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <p><strong>基于生成式AI开发的区域教学成果智能分析与培育系统</strong></p>
+            <p>本系统所有交互式分析页面均由教师借助DeepSeek、豆包等国产大模型自主开发，代码开源可复现，符合创AI案例“AI赋能开发”的核心导向。</p>
+            <p style="margin-top:10px;">© 2026 区域教学成果培育研究项目 · 数据来源：广州市教学成果立项项目公开名单（已脱敏）</p>
+        </footer>
+    </div>
+</body>
+</html>

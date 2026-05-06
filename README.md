@@ -15,7 +15,7 @@
 
 ## 🔗 在线体验
 
-👉 [点击进入系统](https://你的用户名.github.io/teaching-achievement-analysis/)
+👉 [点击进入系统](https://guangzhoushizengchengqukeyanbu.github.io/teaching-achievement-analysis/)
 
 ## 🚀 部署方式
 

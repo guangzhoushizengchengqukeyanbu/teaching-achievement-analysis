@@ -1621,5 +1621,22 @@
         // 页面加载初始化
         document.addEventListener('DOMContentLoaded', initApplication);
     </script>
+<!-- Coze AI 助手（所有页面通用） -->
+<script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.1.0-beta.0/libs/cn/index.js"></script>
+<script>
+  new CozeWebSDK.WebChatClient({
+    config: {
+      bot_id: '7639780856131584046',
+    },
+    auth: {
+      type: 'pat',
+      pat: 'pat_JodAmCsUC85EGhba9lxDQQV5JXj3f9DNDtr1Rx6xWo9RM54iORaTp4Y1kfHpXzRr'   // ⚠️ 请替换成你在用的有效令牌
+    },
+    ui: {
+      base: { hideDisclaimer: true },
+      chatBot: { title: '教学成果智能助手' }
+    }
+  });
+</script>
 </body>
 </html>

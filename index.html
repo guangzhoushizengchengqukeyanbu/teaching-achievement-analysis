@@ -332,5 +332,22 @@
             <p style="margin-top:10px;">© 2026 区域教学成果培育研究项目 · 数据来源：广州市教学成果立项项目公开名单（已脱敏）</p>
         </footer>
     </div>
+<!-- 使用稳定版 SDK -->
+<script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.1.0-beta.0/libs/cn/index.js"></script>
+<script>
+  new CozeWebSDK.WebChatClient({
+    config: {
+      bot_id: '7639780856131584046',
+    },
+    auth: {
+      type: 'pat',                     // 关键：使用 pat 类型
+      pat: 'pat_JodAmCsUC85EGhba9lxDQQV5JXj3f9DNDtr1Rx6xWo9RM54iORaTp4Y1kfHpXzRr'           // 替换成第一步生成的新令牌
+    },
+    ui: {
+      base: { hideDisclaimer: true },
+      chatBot: { title: '教学成果智能助手' }
+    }
+  });
+</script>
 </body>
 </html>
